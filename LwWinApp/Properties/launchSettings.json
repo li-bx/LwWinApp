@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "LwWinApp (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "LwWinApp (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}
