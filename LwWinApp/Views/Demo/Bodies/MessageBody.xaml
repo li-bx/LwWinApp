@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+    x:Class="LwWinApp.Views.Demo.Bodies.MessageBody"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <!-- 弹窗窗口里最常见的一种正文：左边一个图标，右边一句主文案和一句补充。 -->
+    <StackPanel Orientation="Horizontal" Spacing="14">
+        <FontIcon
+            x:Name="Icon"
+            Margin="0,2,0,0"
+            VerticalAlignment="Top"
+            FontSize="26" />
+
+        <!--
+            MaxWidth 是必须的：横向 StackPanel 给子元素的是无限宽，
+            不封顶的话 TextWrapping 不会换行，文字会一路冲出窗口被裁掉。
+            340 是按最窄的那个窗口（默认 460 宽，减去左右各 24 的内边距）留出来的。
+        -->
+        <StackPanel MaxWidth="340" Spacing="8">
+            <TextBlock
+                x:Name="MessageText"
+                LineHeight="22"
+                TextWrapping="Wrap" />
+            <TextBlock
+                x:Name="DetailText"
+                Style="{StaticResource CardCaptionTextStyle}"
+                TextWrapping="Wrap"
+                Visibility="Collapsed" />
+        </StackPanel>
+    </StackPanel>
+</UserControl>

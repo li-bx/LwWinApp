@@ -38,6 +38,7 @@ public static class PageCatalog
 
     public const string ControlsDemo = "demo.controls";
     public const string DialogDemo = "demo.dialog";
+    public const string WindowDemo = "demo.window";
     public const string ProgressDemo = "demo.progress";
     public const string NotificationDemo = "demo.notify";
     public const string FormValidation = "demo.form";
@@ -61,6 +62,7 @@ public static class PageCatalog
         [
             new PageDefinition(ControlsDemo, "常用控件", "", typeof(ControlsDemoPage)),
             new PageDefinition(DialogDemo, "弹出对话框", "", typeof(DialogDemoPage)),
+            new PageDefinition(WindowDemo, "弹窗窗口", "", typeof(WindowDemoPage)),
             new PageDefinition(ProgressDemo, "进度与加载", "", typeof(ProgressDemoPage)),
             new PageDefinition(NotificationDemo, "消息通知", "", typeof(NotificationDemoPage)),
             new PageDefinition(GroupedTable, "分组编辑表格", "", typeof(GroupedTablePage)),

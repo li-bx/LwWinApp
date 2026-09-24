@@ -52,3 +52,23 @@ public enum DialogKind
     Error,
     Question
 }
+
+/// <summary>
+/// 弹窗窗口的关闭原因。
+///
+/// 刻意不用 <c>ContentDialogResult</c>：那个枚举只有 None / Primary / Secondary，
+/// 「点了取消按钮」和「直接关了标题栏的 X」在它那里都是 None，分不出来。
+/// 而这两件事在窗口上必须分得清 —— 一个是用户想撤，一个是用户想跑。
+/// </summary>
+public enum DialogResult
+{
+    /// <summary>没有结果：用户直接关了标题栏的 X（或按了 Esc 而窗口没有取消按钮）。</summary>
+    None = 0,
+
+    Primary = 1,
+
+    Secondary = 2,
+
+    /// <summary>点了取消 / 关闭按钮。</summary>
+    Close = 3
+}

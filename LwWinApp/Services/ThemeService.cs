@@ -22,6 +22,13 @@ public interface IThemeService
 
     /// <summary>在亮/暗之间切换（跟随系统时切到与当前相反的固定主题）。</summary>
     void Toggle();
+
+    /// <summary>
+    /// 把一个非主窗口（弹窗窗口）也设成当前主题。
+    /// 弹窗窗口不在主窗口的视觉树里，RequestedTheme 不会自动继承，
+    /// 不显式设一次的话，深色主题下会弹出一个雪白的窗口。
+    /// </summary>
+    void ApplyToWindow(Window window);
 }
 
 /// <summary>
@@ -87,39 +94,48 @@ public sealed class ThemeService : IThemeService
             return;
         }
 
-        var elementTheme = mode switch
-        {
-            ThemeMode.Light => ElementTheme.Light,
-            ThemeMode.Dark => ElementTheme.Dark,
-            _ => ElementTheme.Default
-        };
-
-        root.RequestedTheme = elementTheme;
+        root.RequestedTheme = ToElementTheme(mode);
 
         // 标题栏和内容区是两套机制，要分别设置。
-        ApplyTitleBarTheme(root.ActualTheme);
+        ApplyTitleBarTheme(_windowContext.MainWindow, mode);
 
         _logger.LogDebug("主题已切换为 {Mode}（实际 {Actual}）", mode, root.ActualTheme);
     }
+
+    public void ApplyToWindow(Window window)
+    {
+        ArgumentNullException.ThrowIfNull(window);
+
+        // 弹窗窗口每次都是新建的，创建时按当前主题设一次就够了；
+        // 想让它跟着后续的切换走，得由创建方在打开时重新调这个（见 IChildWindowService）。
+        if (window.Content is FrameworkElement root)
+            root.RequestedTheme = ToElementTheme(Current);
+
+        ApplyTitleBarTheme(window, Current);
+    }
+
+    private static ElementTheme ToElementTheme(ThemeMode mode) => mode switch
+    {
+        ThemeMode.Light => ElementTheme.Light,
+        ThemeMode.Dark => ElementTheme.Dark,
+        _ => ElementTheme.Default
+    };
 
     /// <summary>
     /// 设置标题栏亮暗。
     /// 优先用 WinAppSDK 的 PreferredTheme（会跟随系统模式），
     /// 拿不到就退回 Win32 的 DWMWA_USE_IMMERSIVE_DARK_MODE。
     /// </summary>
-    private void ApplyTitleBarTheme(ElementTheme actualTheme)
+    private void ApplyTitleBarTheme(Window? window, ThemeMode mode)
     {
-        var window = _windowContext.MainWindow;
         if (window is null) return;
-
-        var isDark = actualTheme == ElementTheme.Dark;
 
         try
         {
             var titleBar = window.AppWindow?.TitleBar;
             if (titleBar is not null)
             {
-                titleBar.PreferredTheme = Current switch
+                titleBar.PreferredTheme = mode switch
                 {
                     ThemeMode.Light => TitleBarTheme.Light,
                     ThemeMode.Dark => TitleBarTheme.Dark,
@@ -134,6 +150,12 @@ public sealed class ThemeService : IThemeService
             // 某些系统版本上 PreferredTheme 不可用，走下面的兜底。
         }
 
-        WindowHelper.SetDarkTitleBar(window, isDark);
+        // 兜底只能给「亮 / 暗」两选一：跟随系统时按主窗口实际生效的主题算。
+        WindowHelper.SetDarkTitleBar(window, mode switch
+        {
+            ThemeMode.Light => false,
+            ThemeMode.Dark => true,
+            _ => IsDark
+        });
     }
 }

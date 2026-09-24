@@ -70,6 +70,84 @@ public static class WindowHelper
     }
 
     /// <summary>
+    /// 把窗口移到属主窗口正中。没有属主、或者算不出位置就退到屏幕正中 ——
+    /// 弹窗出现在属主正中央是桌面上的惯例，出现在别处会让人找一下。
+    /// </summary>
+    public static void CenterOnOwner(Window window, Window? owner)
+    {
+        // 没有属主（或属主还没有尺寸）时退到屏幕正中，至少不会出现在屏幕外。
+        if (owner is null)
+        {
+            CenterOnScreen(window);
+            return;
+        }
+
+        try
+        {
+            var ownerWindow = owner.AppWindow;
+            var appWindow = window.AppWindow;
+
+            appWindow.Move(new PointInt32(
+                ownerWindow.Position.X + Math.Max(0, (ownerWindow.Size.Width - appWindow.Size.Width) / 2),
+                ownerWindow.Position.Y + Math.Max(0, (ownerWindow.Size.Height - appWindow.Size.Height) / 2)));
+        }
+        catch (Exception ex) when (ex is COMException or InvalidOperationException)
+        {
+            CenterOnScreen(window);
+        }
+    }
+
+    /// <summary>
+    /// 设置窗口属主。
+    ///
+    /// 有属主的窗口永远浮在属主之上、跟着属主一起最小化，任务栏上也归在属主旁边 ——
+    /// 这正是「弹窗窗口」该有的行为。WinUI 的 AppWindow 没有开放这个能力，
+    /// 只能往 GWLP_HWNDPARENT 里写属主句柄（对顶层窗口来说它表示的是属主，不是父窗口）。
+    ///
+    /// 必须在窗口显示（Activate）之前调：显示之后再改属主，任务栏按钮会两边都留一份。
+    /// </summary>
+    public static void SetOwner(Window window, Window? owner)
+    {
+        if (owner is null) return;
+
+        var hwnd = GetHandle(window);
+        var ownerHwnd = GetHandle(owner);
+
+        if (hwnd == IntPtr.Zero || ownerHwnd == IntPtr.Zero) return;
+
+        try
+        {
+            // 32 位系统上 user32 只导出 SetWindowLongW，没有 Ptr 版本
+            // （C 头文件里的 SetWindowLongPtr 是个宏，编译期就换掉了）。
+            if (IntPtr.Size == 8)
+                SetWindowLongPtr64(hwnd, GwlpHwndParent, ownerHwnd);
+            else
+                SetWindowLong32(hwnd, GwlpHwndParent, ownerHwnd.ToInt32());
+        }
+        catch (DllNotFoundException)
+        {
+        }
+    }
+
+    /// <summary>
+    /// 启用 / 禁用窗口。被禁用的窗口完全不接收鼠标和键盘输入。
+    /// 「模态窗口」就是靠它实现的 —— WinUI 3 没有原生的模态窗口。
+    /// </summary>
+    public static void SetEnabled(Window window, bool enabled)
+    {
+        var hwnd = GetHandle(window);
+        if (hwnd == IntPtr.Zero) return;
+
+        try
+        {
+            EnableWindow(hwnd, enabled);
+        }
+        catch (DllNotFoundException)
+        {
+        }
+    }
+
+    /// <summary>
     /// 设置标题栏亮暗。WinUI 不会自动跟随应用主题，
     /// 切到深色主题时必须手动调一下，否则标题栏还是白的，很割裂。
     /// </summary>
@@ -202,6 +280,9 @@ public static class WindowHelper
     private const int DwmwaUseImmersiveDarkMode = 20;
     private const int DwmwaUseImmersiveDarkModeLegacy = 19;
     private const int DwmwaWindowCornerPreference = 33;
+
+    /// <summary>GWL_HWNDPARENT。顶层窗口上它是「属主」，子窗口上才是「父窗口」。</summary>
+    private const int GwlpHwndParent = -8;
     private const uint WmGetMinMaxInfo = 0x0024;
     private const uint SubclassId = 0x1A2B;
 
@@ -236,6 +317,15 @@ public static class WindowHelper
 
     [DllImport("user32.dll", CharSet = CharSet.Unicode)]
     private static extern IntPtr SendMessage(IntPtr hwnd, uint msg, IntPtr wParam, IntPtr lParam);
+
+    [DllImport("user32.dll")]
+    private static extern bool EnableWindow(IntPtr hwnd, bool enable);
+
+    [DllImport("user32.dll", EntryPoint = "SetWindowLongPtrW", SetLastError = true)]
+    private static extern IntPtr SetWindowLongPtr64(IntPtr hwnd, int index, IntPtr value);
+
+    [DllImport("user32.dll", EntryPoint = "SetWindowLongW", SetLastError = true)]
+    private static extern int SetWindowLong32(IntPtr hwnd, int index, int value);
 
     private delegate IntPtr SubclassProcDelegate(
         IntPtr hWnd, uint uMsg, IntPtr wParam, IntPtr lParam, uint uIdSubclass, IntPtr dwRefData);

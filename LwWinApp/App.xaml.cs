@@ -130,6 +130,7 @@ public partial class App : Application
         services.AddSingleton<IWindowService, WindowService>();
         services.AddSingleton<INotificationService, NotificationService>();
         services.AddSingleton<IFilePickerService, FilePickerService>();
+        services.AddSingleton<IChildWindowService, ChildWindowService>();
         services.AddSingleton<IAppSettingsService, AppSettingsService>();
 
         // ---- 业务服务 ----
@@ -155,6 +156,7 @@ public partial class App : Application
         // ---- 示例页 ViewModel ----
         services.AddTransient<ControlsDemoViewModel>();
         services.AddTransient<DialogDemoViewModel>();
+        services.AddTransient<WindowDemoViewModel>();
         services.AddTransient<ProgressDemoViewModel>();
         services.AddTransient<NotificationDemoViewModel>();
         services.AddTransient<FormValidationViewModel>();

@@ -25,4 +25,12 @@ public static class AppConstants
     /// <summary>窗口默认尺寸。</summary>
     public const int DefaultWindowWidth = 1440;
     public const int DefaultWindowHeight = 900;
+
+    /// <summary>弹窗窗口的默认尺寸（逻辑像素）。单个窗口可以在 DialogWindow 上覆盖。</summary>
+    public const int DefaultDialogWidth = 460;
+    public const int DefaultDialogHeight = 300;
+
+    /// <summary>弹窗窗口的最小尺寸。比主窗口小得多，但太窄了正文会挤成一列。</summary>
+    public const int MinDialogWidth = 320;
+    public const int MinDialogHeight = 200;
 }
