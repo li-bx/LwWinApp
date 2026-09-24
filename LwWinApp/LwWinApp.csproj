@@ -95,9 +95,19 @@
     <Content Include="Assets\Wide310x150Logo.scale-200.png" />
   </ItemGroup>
 
-  <!-- 配置文件与建库脚本随程序输出，方便部署后直接改连接串 -->
+  <!--
+    配置文件与建库脚本随程序输出，方便部署后直接改连接串。
+
+    两项都带 Exists 条件，因为 appsettings.json 是**不跟踪**的本地文件
+    （里面有真实连接串，见 .gitignore）：刚克隆下来时它并不存在，
+    而没条件的 Content 项会在复制的环节报 MSB3030「找不到文件」，
+    整个构建直接失败 —— 编译代码本身并不需要这个文件。
+  -->
   <ItemGroup>
-    <Content Include="appsettings.json">
+    <Content Include="appsettings.json" Condition="Exists('appsettings.json')">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="appsettings.example.json" Condition="Exists('appsettings.example.json')">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Sql\**\*.sql">

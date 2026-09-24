@@ -1,0 +1,41 @@
+name: build
+
+# 只做一件事：在干净的 Windows 环境下把代码编一遍，确认提交进来的改动编译得过。
+#
+# 刻意不做的事：
+#   - 不跑测试（本仓库没有测试工程，"验证"是拿 tools/ 里的 UIA 脚本真跑一遍，见 README 第 10 节）
+#   - 不连数据库（这台机器上没有 MySQL，连不上也只是测试失败，跟代码质量无关）
+#   - 不出包（发布由本机的 PublishProfile 走，见 Properties/PublishProfiles/）
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    # WinUI 3 的 XAML 编译器要在 Windows 上跑，不能换 windows-latest 之外的环境。
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      # 缓存 NuGet 包。Windows App SDK 的包不小，每次重新拉要一两分钟。
+      - uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: ${{ runner.os }}-nuget-
+
+      # 仓库里没有 appsettings.json（它是本机文件，见 .gitignore），
+      # csproj 里那两项 Content 都带 Exists 条件，所以这里直接编就行，不用先造一个假的。
+      #
+      # 必须显式给 -p:Platform=x64：WindowsAppSDKSelfContained 不接受 AnyCPU。
+      # csproj 里虽然补了默认值，但那是在 Microsoft.Common.props 之后才生效的兜底，
+      # 命令行给全局属性最稳妥，也跟 README 里贴的命令保持一致。
+      - name: Build (x64, Release)
+        run: dotnet build LwWinApp/LwWinApp.csproj -c Release -p:Platform=x64 --nologo
