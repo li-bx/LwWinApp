@@ -1,0 +1,363 @@
+<?xml version="1.0" encoding="utf-8"?>
+<views:PageBase
+    x:Class="LwWinApp.Views.Demo.GroupedTablePage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:controls="using:LwWinApp.Controls"
+    xmlns:demo="using:LwWinApp.ViewModels.Demo"
+    xmlns:demoViews="using:LwWinApp.Views.Demo"
+    xmlns:views="using:LwWinApp.Views"
+    mc:Ignorable="d">
+
+    <views:PageBase.Resources>
+        <!--
+            三种行的模板。列宽不写在这里：表头和数据行各是一次 Grid 布局，
+            XAML 没有共享 ColumnDefinitions 的机制，宽度写两遍迟早会错位。
+            现在宽度只有一份（ViewModel 上的 TableLayout），两边都用 controls:TableGrid，
+            XAML 里只写 Grid.Column。分组行是整行铺满的，不参与对齐。
+        -->
+
+        <!-- 一级分组：大类 -->
+        <DataTemplate x:Key="MajorRowTemplate" x:DataType="demo:MajorGroupRow">
+            <Button
+                MinHeight="40"
+                HorizontalAlignment="Stretch"
+                HorizontalContentAlignment="Stretch"
+                Background="{ThemeResource BrandSubtleBrush}"
+                Click="OnToggleGroupClick"
+                Style="{StaticResource GroupRowButtonStyle}">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <FontIcon
+                        VerticalAlignment="Center"
+                        FontSize="12"
+                        Glyph="{x:Bind ChevronGlyph, Mode=OneWay}" />
+                    <TextBlock
+                        VerticalAlignment="Center"
+                        Style="{StaticResource CardTitleTextStyle}"
+                        Text="{x:Bind Name}" />
+                    <TextBlock
+                        VerticalAlignment="Center"
+                        Style="{StaticResource CardCaptionTextStyle}"
+                        Text="{x:Bind Summary, Mode=OneWay}" />
+                </StackPanel>
+            </Button>
+        </DataTemplate>
+
+        <!-- 二级分组：小类。缩进 28，一眼看出层级 -->
+        <DataTemplate x:Key="SubRowTemplate" x:DataType="demo:SubGroupRow">
+            <Button
+                MinHeight="36"
+                Margin="0"
+                HorizontalAlignment="Stretch"
+                HorizontalContentAlignment="Stretch"
+                Background="{ThemeResource TableHeaderBackgroundBrush}"
+                Click="OnToggleGroupClick"
+                Style="{StaticResource GroupRowButtonStyle}">
+                <StackPanel
+                    Margin="28,0,0,0"
+                    Orientation="Horizontal"
+                    Spacing="8">
+                    <FontIcon
+                        VerticalAlignment="Center"
+                        FontSize="12"
+                        Glyph="{x:Bind ChevronGlyph, Mode=OneWay}" />
+                    <TextBlock
+                        VerticalAlignment="Center"
+                        Style="{StaticResource BodyStrongTextBlockStyle}"
+                        Text="{x:Bind Name}" />
+                    <TextBlock
+                        VerticalAlignment="Center"
+                        Style="{StaticResource CardCaptionTextStyle}"
+                        Text="{x:Bind Summary, Mode=OneWay}" />
+                </StackPanel>
+            </Button>
+        </DataTemplate>
+
+        <!-- 数据行：前 3 列只读，第 4 列多行文本框，第 5 列下拉框 -->
+        <DataTemplate x:Key="ItemRowTemplate" x:DataType="demo:GroupedItemRow">
+            <!-- 行高绑到行对象上：拖这一行的底边就能改，备注写长了可以拉大一点 -->
+            <controls:TableGrid
+                Height="{x:Bind RowHeight, Mode=OneWay}"
+                Background="Transparent"
+                Layout="{x:Bind Layout}">
+
+                <TextBlock
+                    Grid.Column="0"
+                    Style="{StaticResource TableCellTextStyle}"
+                    Text="{x:Bind Code}" />
+                <TextBlock
+                    Grid.Column="1"
+                    Style="{StaticResource TableCellTextStyle}"
+                    Text="{x:Bind Name}" />
+                <TextBlock
+                    Grid.Column="2"
+                    Style="{StaticResource TableCellTextStyle}"
+                    Text="{x:Bind Spec}" />
+
+                <!--
+                    第 4 列是多行输入：AcceptsReturn 让回车换行而不是提交，
+                    TextWrapping 自动折行，装不下时框内自己滚动。外框撑满单元格，
+                    所以点在单元格任意位置都能直接开始写；行高不够就拖行底边拉大。
+
+                    UpdateSourceTrigger 必须显式写成 PropertyChanged：
+                    x:Bind 在 TextBox.Text 上的默认行为是「失焦才回写」，
+                    那样「已改 N 条」要等点到别处才更新，最后编辑的那一格
+                    还有被丢掉的经典问题（见 README 第 9 节）。
+                -->
+                <TextBox
+                    Grid.Column="3"
+                    Margin="8,6"
+                    AcceptsReturn="True"
+                    PlaceholderText="填点备注试试"
+                    ScrollViewer.VerticalScrollBarVisibility="Auto"
+                    Text="{x:Bind Remark, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                    TextWrapping="Wrap"
+                    VerticalAlignment="Stretch" />
+
+                <ComboBox
+                    Grid.Column="4"
+                    Margin="8,0"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Center"
+                    DisplayMemberPath="Text"
+                    ItemsSource="{x:Bind StatusOptions}"
+                    SelectedItem="{x:Bind Status, Mode=TwoWay}" />
+
+                <!--
+                    改过的行在最左边亮一条竖线。用叠在单元格上的 Border 而不是给整行上底色：
+                    底色会和 ListView 的悬停/选中视觉打架，而且宽度变化会让文字左右跳。
+                -->
+                <Border
+                    Grid.Column="0"
+                    Width="3"
+                    HorizontalAlignment="Left"
+                    Background="{ThemeResource BrandPrimaryBrush}"
+                    Visibility="{x:Bind IsDirty, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}" />
+
+                <!-- 行底边：按住上下拖改这一行的高度。横线平时透明，鼠标上来或拖动时点亮 -->
+                <controls:ResizeGrip
+                    x:Name="RowGrip"
+                    Grid.Column="0"
+                    Grid.ColumnSpan="5"
+                    Height="8"
+                    VerticalAlignment="Bottom"
+                    Orientation="Horizontal"
+                    Dragged="OnRowGripDragged">
+                    <Border
+                        Height="1"
+                        VerticalAlignment="Bottom"
+                        Background="{ThemeResource BrandPrimaryBrush}" />
+                </controls:ResizeGrip>
+            </controls:TableGrid>
+        </DataTemplate>
+
+        <demoViews:GroupedRowTemplateSelector
+            x:Key="GroupedRowTemplateSelector"
+            ItemTemplate="{StaticResource ItemRowTemplate}"
+            MajorTemplate="{StaticResource MajorRowTemplate}"
+            SubTemplate="{StaticResource SubRowTemplate}" />
+    </views:PageBase.Resources>
+
+    <Grid>
+        <!--
+            整页分三行：表头区 / 提示条 / 卡片。Auto 行先按内容拿高度，剩下的全给 * 行，
+            所以窗口变高变矮，变的都是表格那一块。表格自己滚，整页不用滚。
+        -->
+        <Grid Padding="24">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <controls:PageHeader
+                Grid.Row="0"
+                Title="分组编辑表格"
+                Description="两级分组的数据表：大类 → 小类 → 数据行。前 3 列只读，第 4 列多行文本输入、第 5 列下拉选择，改动会即时统计出来。列宽和行高都能用鼠标拖。">
+                <controls:PageHeader.Actions>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Button Command="{x:Bind Vm.ExpandAllCommand}" Style="{StaticResource ToolbarButtonStyle}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon FontSize="14" Glyph="&#xE70D;" />
+                                <TextBlock Text="全部展开" />
+                            </StackPanel>
+                        </Button>
+
+                        <Button Command="{x:Bind Vm.CollapseAllCommand}" Style="{StaticResource ToolbarButtonStyle}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon FontSize="14" Glyph="&#xE76C;" />
+                                <TextBlock Text="全部折叠" />
+                            </StackPanel>
+                        </Button>
+
+                        <Button Command="{x:Bind Vm.ResetCommand}" Style="{StaticResource ToolbarButtonStyle}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon FontSize="14" Glyph="&#xE72C;" />
+                                <TextBlock Text="重置示例数据" />
+                            </StackPanel>
+                        </Button>
+
+                        <Button Command="{x:Bind Vm.SaveCommand}" Style="{StaticResource ToolbarButtonStyle}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon FontSize="14" Glyph="&#xE74E;" />
+                                <TextBlock Text="保存修改" />
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </controls:PageHeader.Actions>
+            </controls:PageHeader>
+
+            <InfoBar
+                Grid.Row="1"
+                Margin="0,16,0,0"
+                IsClosable="False"
+                IsOpen="True"
+                Message="{x:Bind Vm.SummaryText, Mode=OneWay}"
+                Severity="Informational"
+                Title="当前数据" />
+
+            <Border
+                Grid.Row="2"
+                Margin="0,16,0,0"
+                Style="{StaticResource CardStyle}">
+                <!-- 卡片里同样分行：标题 / 说明 / 表头 / *表格 / 提示 -->
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <TextBlock
+                        Grid.Row="0"
+                        Style="{StaticResource SectionTitleTextStyle}"
+                        Text="多级分组编辑表格" />
+                    <TextBlock
+                        Grid.Row="1"
+                        Style="{StaticResource CardCaptionTextStyle}"
+                        Text="点大类 / 小类那一行展开或收起。折叠只是把行收起来，编辑内容不会丢。第 1~3 列的物料编码、名称、规格来自数据文件，只做展示。第 4 列可写多行，回车换行、装不下自己滚动；鼠标拖表头上的列边界改列宽，拖数据行的底边改这一行的高度。" />
+
+                    <!--
+                        表头。列宽和数据行共用 ViewModel 上那一份 TableLayout，
+                        所以这里不用（也不能）再写一遍宽度。
+                    -->
+                    <Border
+                        Grid.Row="2"
+                        Margin="0,16,0,0"
+                        Style="{StaticResource TableHeaderBorderStyle}">
+                        <controls:TableGrid Layout="{x:Bind Vm.Layout}">
+                            <TextBlock
+                                Grid.Column="0"
+                                Style="{StaticResource TableHeaderTextStyle}"
+                                Text="物料编码" />
+                            <TextBlock
+                                Grid.Column="1"
+                                Style="{StaticResource TableHeaderTextStyle}"
+                                Text="物料名称" />
+                            <TextBlock
+                                Grid.Column="2"
+                                Style="{StaticResource TableHeaderTextStyle}"
+                                Text="规格型号" />
+                            <TextBlock
+                                Grid.Column="3"
+                                Style="{StaticResource TableHeaderTextStyle}"
+                                Text="备注（可编辑，多行）" />
+                            <TextBlock
+                                Grid.Column="4"
+                                Style="{StaticResource TableHeaderTextStyle}"
+                                Text="状态（可选）" />
+
+                            <!--
+                                列边界把手：靠右贴在所在列的右边线上，所以拖的永远是这一列的右边界。
+                                序号写在 Tag 上（Tag 是「边界左边那一列」的下标），拖动逻辑在页面后置代码里。
+                            -->
+                            <controls:ResizeGrip
+                                x:Name="ColGrip0"
+                                Grid.Column="0"
+                                Width="8"
+                                HorizontalAlignment="Right"
+                                Orientation="Vertical"
+                                Tag="0"
+                                Dragged="OnColumnGripDragged">
+                                <Border
+                                    Width="1"
+                                    HorizontalAlignment="Right"
+                                    Background="{ThemeResource TableBorderBrush}" />
+                            </controls:ResizeGrip>
+
+                            <controls:ResizeGrip
+                                x:Name="ColGrip1"
+                                Grid.Column="1"
+                                Width="8"
+                                HorizontalAlignment="Right"
+                                Orientation="Vertical"
+                                Tag="1"
+                                Dragged="OnColumnGripDragged">
+                                <Border
+                                    Width="1"
+                                    HorizontalAlignment="Right"
+                                    Background="{ThemeResource TableBorderBrush}" />
+                            </controls:ResizeGrip>
+
+                            <controls:ResizeGrip
+                                x:Name="ColGrip2"
+                                Grid.Column="2"
+                                Width="8"
+                                HorizontalAlignment="Right"
+                                Orientation="Vertical"
+                                Tag="2"
+                                Dragged="OnColumnGripDragged">
+                                <Border
+                                    Width="1"
+                                    HorizontalAlignment="Right"
+                                    Background="{ThemeResource TableBorderBrush}" />
+                            </controls:ResizeGrip>
+
+                            <!-- 活动列（备注）的右边界：拖它改的是状态那列的宽度 -->
+                            <controls:ResizeGrip
+                                x:Name="ColGrip3"
+                                Grid.Column="3"
+                                Width="8"
+                                HorizontalAlignment="Right"
+                                Orientation="Vertical"
+                                Tag="3"
+                                Dragged="OnColumnGripDragged">
+                                <Border
+                                    Width="1"
+                                    HorizontalAlignment="Right"
+                                    Background="{ThemeResource TableBorderBrush}" />
+                            </controls:ResizeGrip>
+                        </controls:TableGrid>
+                    </Border>
+
+                    <!--
+                        表格放在 * 行里，高度就是「窗口剩下的那些」：窗口拉高它就跟着长高，
+                        不用再写死一个数。ListView 自己滚动，所以外层不能再套 ScrollViewer ——
+                        套了高度就是无限的，虚拟化失效、所有行都被实例化。
+                        窗口压到最小（AppConstants.MinWindowHeight = 640）时表格还剩一百来像素，
+                        滚动条拖得动，所以没给它 MinHeight —— 实测星号行的最小尺寸不参与行高分配，
+                        标了也不生效，只会让注释撒谎。
+                    -->
+                    <ListView
+                        Grid.Row="3"
+                        IsItemClickEnabled="False"
+                        ItemContainerStyle="{StaticResource TableRowStyle}"
+                        ItemsSource="{x:Bind Vm.Rows, Mode=OneWay}"
+                        ItemTemplateSelector="{StaticResource GroupedRowTemplateSelector}"
+                        SelectionMode="None" />
+
+                    <TextBlock
+                        Grid.Row="4"
+                        Margin="0,10,0,0"
+                        Style="{StaticResource HintTextStyle}"
+                        Text="{x:Bind Vm.DataSourceText, Mode=OneWay}" />
+                </Grid>
+            </Border>
+        </Grid>
+
+        <controls:BusyOverlay IsActive="{x:Bind Vm.IsBusy, Mode=OneWay}" Text="正在处理…" />
+    </Grid>
+</views:PageBase>

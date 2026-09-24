@@ -1,10 +1,35 @@
 <Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
+    <!--
+      默认平台设为 x64。
+      WindowsAppSDKSelfContained 要求平台必须是 x86/x64/ARM64 之一，而
+      dotnet build / dotnet run 不带 -p:Platform 时，Microsoft.Common.props 早
+      已把 Platform 置为 AnyCPU，SDK 会直接报
+      「WindowsAppSDKSelfContained requires a supported Windows architecture」。
+      这里补一个默认值，裸跑 dotnet run 才能用。
+
+      必须放在下面 PublishProfile 之前：那一行是用 $(Platform) 拼出
+      win-$(Platform).pubxml 的，放晚了就会拼成 win-AnyCPU.pubxml 而找不到文件。
+
+      显式传 -p:Platform=ARM64 时，全局属性优先级高于这里，不受影响。
+    -->
+    <Platform Condition="'$(Platform)' == '' or '$(Platform)' == 'AnyCPU'">x64</Platform>
+
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
     <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
     <RootNamespace>LwWinApp</RootNamespace>
+    <AssemblyName>LwWinApp</AssemblyName>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+
+    <!--
+      应用图标。会被编译进 exe 的图标资源，任务栏、资源管理器、窗口标题栏都从这里取。
+      无打包应用没有 MSIX 的磁贴图可用，exe 自带的这份图标就是唯一的来源 ——
+      不设它，Windows 会画那个「两个方框」的通用占位图标。
+      改图标内容重跑 tools/make-icon.ps1，不要手改这个文件。
+    -->
+    <ApplicationIcon>Assets\AppIcon.ico</ApplicationIcon>
     <Platforms>x86;x64;ARM64</Platforms>
     <RuntimeIdentifiers>win-x86;win-x64;win-arm64</RuntimeIdentifiers>
     <PublishProfile>win-$(Platform).pubxml</PublishProfile>
@@ -12,7 +37,53 @@
     <WinUISDKReferences>false</WinUISDKReferences>
     <EnableMsixTooling>true</EnableMsixTooling>
     <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+
+    <!--
+      MVVMTK0045 是「[ObservableProperty] 加在字段上不利于 AOT」的提示。
+      本框架不发布 AOT（WinUI 3 桌面应用走 ReadyToRun，见下面的 PublishReadyToRun），
+      而改成 partial property 需要 C# 13 + net9.0 目标框架，代价大于收益。
+      这里显式关掉这一条，而不是用 NoWarn 一把全关，别的 MVVM 警告照常报出来。
+    -->
+    <NoWarn>$(NoWarn);MVVMTK0045</NoWarn>
   </PropertyGroup>
+
+  <!--
+    无打包（unpackaged）运行模式。
+    设为 None 后可以直接 dotnet run / 双击 exe 启动，无需 MSIX 注册；
+    配合 WindowsAppSDKSelfContained 把 Windows App SDK 原生运行时一并带到输出目录，
+    目标机器不必预装 Windows App Runtime。
+
+    若要改回 MSIX 打包：必须同时去掉 WindowsPackageType 并把 EnableMsixTooling 改回 true。
+    只删 WindowsPackageType 是不够的 —— EnableMsixTooling=false 会让 MSIX 的
+    props/targets 完全不导入（它是开关，不是描述），打包目标不会生效。
+    打包资源（Package.appxmanifest、Assets、PublishProfiles）都还留着，不用重建。
+  -->
+  <PropertyGroup>
+    <WindowsPackageType>None</WindowsPackageType>
+    <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+    <EnableMsixTooling>false</EnableMsixTooling>
+    <PublishTrimmed>false</PublishTrimmed>
+    <PublishReadyToRun Condition="'$(Configuration)' == 'Debug'">False</PublishReadyToRun>
+    <PublishReadyToRun Condition="'$(Configuration)' != 'Debug'">True</PublishReadyToRun>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.28000.2705" />
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="2.5.1" />
+
+    <!-- MVVM：源生成器提供 ObservableProperty / RelayCommand / ObservableValidator -->
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+
+    <!-- 数据访问：轻量 ORM + MySQL 异步驱动 -->
+    <PackageReference Include="Dapper" Version="2.1.86" />
+    <PackageReference Include="MySqlConnector" Version="2.6.2" />
+
+    <!-- 依赖注入 / 配置 / 日志 -->
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.12" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.12" />
+  </ItemGroup>
 
   <ItemGroup>
     <Content Include="Assets\SplashScreen.scale-200.png" />
@@ -24,37 +95,45 @@
     <Content Include="Assets\Wide310x150Logo.scale-200.png" />
   </ItemGroup>
 
+  <!-- 配置文件与建库脚本随程序输出，方便部署后直接改连接串 -->
+  <ItemGroup>
+    <Content Include="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Sql\**\*.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <!-- 示例页用的模拟数据。放输出目录是刻意的：装到哪儿都能直接改这个文件。 -->
+    <Content Include="Assets\Data\**\*.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <!--
+    图标要随程序输出一份，而且 ico / png 两个都要：
+    - AppIcon.ico —— <ApplicationIcon> 只是把图标嵌进 exe 的资源段，无打包运行时
+      它不会自动挂到窗口上，还得启动时按路径读出来设窗口图标（任务栏 / Alt+Tab 用它）；
+    - AppIcon.png —— 标题栏左上角那个应用标记直接显示这一张，跟任务栏同源。
+  -->
+  <ItemGroup>
+    <Content Include="Assets\AppIcon.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\AppIcon.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
   <ItemGroup>
     <Manifest Include="$(ApplicationManifest)" />
   </ItemGroup>
 
-  <!--
-    Defining the "Msix" ProjectCapability here allows the Single-project MSIX Packaging
-    Tools extension to be activated for this project even if the Windows App SDK Nuget
-    package has not yet been restored.
-  -->
   <ItemGroup Condition="'$(DisableMsixProjectCapabilityAddedByProject)'!='true' and '$(EnableMsixTooling)'=='true'">
     <ProjectCapability Include="Msix" />
   </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.28000.2705" />
-    <PackageReference Include="Microsoft.WindowsAppSDK" Version="2.5.1" />
-  </ItemGroup>
 
-  <!--
-    Defining the "HasPackageAndPublishMenuAddedByProject" property here allows the Solution
-    Explorer "Package and Publish" context menu entry to be enabled for this project even if
-    the Windows App SDK Nuget package has not yet been restored.
-  -->
   <PropertyGroup Condition="'$(DisableHasPackageAndPublishMenuAddedByProject)'!='true' and '$(EnableMsixTooling)'=='true'">
     <HasPackageAndPublishMenu>true</HasPackageAndPublishMenu>
   </PropertyGroup>
 
-  <!-- Publish Properties -->
-  <PropertyGroup>
-    <PublishReadyToRun Condition="'$(Configuration)' == 'Debug'">False</PublishReadyToRun>
-    <PublishReadyToRun Condition="'$(Configuration)' != 'Debug'">True</PublishReadyToRun>
-    <PublishTrimmed Condition="'$(Configuration)' == 'Debug'">False</PublishTrimmed>
-    <PublishTrimmed Condition="'$(Configuration)' != 'Debug'">True</PublishTrimmed>
-  </PropertyGroup>
 </Project>

@@ -1,0 +1,116 @@
+{
+  "Majors": [
+    {
+      "Name": "电气设备",
+      "Subs": [
+        {
+          "Name": "电机",
+          "Items": [
+            { "Code": "EL-MTR-001", "Name": "三相异步电动机", "Spec": "Y2-132S-4  5.5kW  B3", "Remark": "1# 生产线主驱动", "Status": "在用" },
+            { "Code": "EL-MTR-002", "Name": "三相异步电动机", "Spec": "Y2-160M-4  11kW  B3", "Remark": "空压机配套", "Status": "在用" },
+            { "Code": "EL-MTR-003", "Name": "变频调速电动机", "Spec": "YVF2-112M-4  4kW", "Remark": "与 EL-VFD-001 配套使用", "Status": "在用" },
+            { "Code": "EL-MTR-004", "Name": "直流伺服电机", "Spec": "130ST-M10015  1.5kW", "Remark": "库房备件", "Status": "待检" },
+            { "Code": "EL-MTR-005", "Name": "防爆电动机", "Spec": "YB3-100L1-4  2.2kW", "Remark": "油库区，检修需持证", "Status": "在用" },
+            { "Code": "EL-MTR-006", "Name": "步进电机", "Spec": "86BYG250H  12N·m", "Remark": "旧线拆下，待报废", "Status": "停用" }
+          ]
+        },
+        {
+          "Name": "变频器",
+          "Items": [
+            { "Code": "EL-VFD-001", "Name": "通用变频器", "Spec": "FR-A840-00160-2-60  7.5kW", "Remark": "A 区控制柜，带 1# 电机", "Status": "在用" },
+            { "Code": "EL-VFD-002", "Name": "通用变频器", "Spec": "FR-A840-00310-2-60  15kW", "Remark": "参数已备份到工控机", "Status": "在用" },
+            { "Code": "EL-VFD-003", "Name": "矢量变频器", "Spec": "MD500T11GB  11kW", "Remark": "报 E002 过流，待查", "Status": "待检" },
+            { "Code": "EL-VFD-004", "Name": "软启动器", "Spec": "STR022L-3  22kW", "Remark": "水泵软启", "Status": "在用" },
+            { "Code": "EL-VFD-005", "Name": "单相变频器", "Spec": "VFD-M  0.75kW", "Remark": "试验台调速用", "Status": "在用" },
+            { "Code": "EL-VFD-006", "Name": "通用变频器", "Spec": "ATV310  2.2kW", "Remark": "风扇损坏，等待备件", "Status": "停用" }
+          ]
+        },
+        {
+          "Name": "配电柜",
+          "Items": [
+            { "Code": "EL-SWB-001", "Name": "低压配电柜", "Spec": "GGD  2000×800×600", "Remark": "1# 配电房", "Status": "在用" },
+            { "Code": "EL-SWB-002", "Name": "动力配电箱", "Spec": "XL-21-05", "Remark": "车间西侧", "Status": "在用" },
+            { "Code": "EL-SWB-003", "Name": "照明配电箱", "Spec": "PZ30-12 回路", "Remark": "办公楼二层", "Status": "在用" },
+            { "Code": "EL-SWB-004", "Name": "电容补偿柜", "Spec": "GGJ-01  90kvar", "Remark": "投切接触器异响", "Status": "待检" },
+            { "Code": "EL-SWB-005", "Name": "检修电源箱", "Spec": "JXF  300×400", "Remark": "大修期间临时使用", "Status": "停用" }
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "机械设备",
+      "Subs": [
+        {
+          "Name": "离心泵",
+          "Items": [
+            { "Code": "ME-PMP-001", "Name": "卧式离心泵", "Spec": "IS100-65-200  25m³/h", "Remark": "循环水主力泵", "Status": "在用" },
+            { "Code": "ME-PMP-002", "Name": "立式多级泵", "Spec": "CDL32-50  扬程 62m", "Remark": "锅炉给水", "Status": "在用" },
+            { "Code": "ME-PMP-003", "Name": "管道泵", "Spec": "IRG65-125  7.5kW", "Remark": "空调循环", "Status": "在用" },
+            { "Code": "ME-PMP-004", "Name": "潜水排污泵", "Spec": "WQ50-15-2.2", "Remark": "污水池，汛期前须检查", "Status": "在用" },
+            { "Code": "ME-PMP-005", "Name": "化工离心泵", "Spec": "IH50-32-160  304 不锈钢", "Remark": "输送 5% 碱液", "Status": "在用" },
+            { "Code": "ME-PMP-006", "Name": "计量泵", "Spec": "JXM-A 120/0.7", "Remark": "加药间，流量偏差偏大", "Status": "待检" },
+            { "Code": "ME-PMP-007", "Name": "卧式离心泵", "Spec": "IS80-50-200  50m³/h", "Remark": "备机，2023 年大修换过轴承", "Status": "在用" }
+          ]
+        },
+        {
+          "Name": "阀门",
+          "Items": [
+            { "Code": "ME-VLV-001", "Name": "闸阀", "Spec": "Z41H-16C  DN100", "Remark": "蒸汽主管", "Status": "在用" },
+            { "Code": "ME-VLV-002", "Name": "截止阀", "Spec": "J41H-25  DN50", "Remark": "手动旁路", "Status": "在用" },
+            { "Code": "ME-VLV-003", "Name": "对夹式蝶阀", "Spec": "D71X-16  DN150", "Remark": "循环水回水", "Status": "在用" },
+            { "Code": "ME-VLV-004", "Name": "球阀", "Spec": "Q41F-16P  DN25", "Remark": "取样口", "Status": "在用" },
+            { "Code": "ME-VLV-005", "Name": "止回阀", "Spec": "H44H-16C  DN80", "Remark": "泵出口", "Status": "在用" },
+            { "Code": "ME-VLV-006", "Name": "弹簧安全阀", "Spec": "A28H-16  DN40", "Remark": "已校验，下次校验 2026-03", "Status": "在用" }
+          ]
+        },
+        {
+          "Name": "风机",
+          "Items": [
+            { "Code": "ME-FAN-001", "Name": "离心通风机", "Spec": "4-72-No.6C  15kW", "Remark": "除尘系统", "Status": "在用" },
+            { "Code": "ME-FAN-002", "Name": "轴流通风机", "Spec": "T35-11-No.5  0.75kW", "Remark": "车间换气", "Status": "在用" },
+            { "Code": "ME-FAN-003", "Name": "罗茨鼓风机", "Spec": "LBSR-80", "Remark": "皮带打滑，待检修", "Status": "待检" },
+            { "Code": "ME-FAN-004", "Name": "玻璃钢防腐风机", "Spec": "BF4-72-No.4A", "Remark": "酸洗间", "Status": "在用" },
+            { "Code": "ME-FAN-005", "Name": "屋顶排风机", "Spec": "DWT-I-No.7", "Remark": "综合楼屋顶", "Status": "在用" }
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "仪表仪器",
+      "Subs": [
+        {
+          "Name": "压力变送器",
+          "Items": [
+            { "Code": "IN-PRS-001", "Name": "智能压力变送器", "Spec": "3051TG2A  0~1.6MPa", "Remark": "蒸汽母管", "Status": "在用" },
+            { "Code": "IN-PRS-002", "Name": "差压变送器", "Spec": "3051DP3A  0~100kPa", "Remark": "与孔板配套测流量", "Status": "在用" },
+            { "Code": "IN-PRS-003", "Name": "数显压力表", "Spec": "YB-150A  0~2.5MPa", "Remark": "就地显示", "Status": "在用" },
+            { "Code": "IN-PRS-004", "Name": "压力变送器", "Spec": "EJA430E  0~10MPa", "Remark": "零点漂移，待重新标定", "Status": "待检" },
+            { "Code": "IN-PRS-005", "Name": "耐震压力表", "Spec": "YN-100  0~1.6MPa", "Remark": "泵出口", "Status": "在用" },
+            { "Code": "IN-PRS-006", "Name": "压力开关", "Spec": "YWK-50-C  0.3MPa", "Remark": "连锁停泵", "Status": "在用" }
+          ]
+        },
+        {
+          "Name": "温度仪表",
+          "Items": [
+            { "Code": "IN-TMP-001", "Name": "铠装热电偶", "Spec": "WRN-230  K 型  L=650", "Remark": "加热炉炉膛", "Status": "在用" },
+            { "Code": "IN-TMP-002", "Name": "铂热电阻", "Spec": "WZP-230  PT100", "Remark": "水箱测温", "Status": "在用" },
+            { "Code": "IN-TMP-003", "Name": "双金属温度计", "Spec": "WSS-411  0~150℃", "Remark": "就地显示", "Status": "在用" },
+            { "Code": "IN-TMP-004", "Name": "红外测温仪", "Spec": "TI-450  -30~500℃", "Remark": "巡检班用", "Status": "在用" },
+            { "Code": "IN-TMP-005", "Name": "温度变送器", "Spec": "SBWZ-2460  4~20mA", "Remark": "输出跳变，待查接线", "Status": "待检" }
+          ]
+        },
+        {
+          "Name": "流量计",
+          "Items": [
+            { "Code": "IN-FLW-001", "Name": "电磁流量计", "Spec": "LDG-DN80", "Remark": "循环水回水", "Status": "在用" },
+            { "Code": "IN-FLW-002", "Name": "涡街流量计", "Spec": "LUGB-DN50", "Remark": "饱和蒸汽", "Status": "在用" },
+            { "Code": "IN-FLW-003", "Name": "涡轮流量计", "Spec": "LWGY-DN25", "Remark": "柴油计量", "Status": "在用" },
+            { "Code": "IN-FLW-004", "Name": "外夹式超声波流量计", "Spec": "TDS-100H  DN50~DN300", "Remark": "便携，用于比对", "Status": "在用" },
+            { "Code": "IN-FLW-005", "Name": "玻璃转子流量计", "Spec": "LZB-40  1~10m³/h", "Remark": "试验台", "Status": "在用" },
+            { "Code": "IN-FLW-006", "Name": "质量流量计", "Spec": "DMF-1-3  DN25", "Remark": "计量检定已过期", "Status": "停用" }
+          ]
+        }
+      ]
+    }
+  ]
+}

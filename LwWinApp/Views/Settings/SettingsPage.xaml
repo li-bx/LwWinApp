@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="utf-8"?>
+<views:PageBase
+    x:Class="LwWinApp.Views.Settings.SettingsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:controls="using:LwWinApp.Controls"
+    xmlns:views="using:LwWinApp.Views"
+    mc:Ignorable="d">
+
+    <Grid>
+        <ScrollViewer Padding="24" VerticalScrollBarVisibility="Auto">
+            <StackPanel MaxWidth="900" HorizontalAlignment="Left" Spacing="16">
+
+                <controls:PageHeader
+                    Title="系统设置"
+                    Description="能改的都在这里改，改完立刻生效并写回 settings.json；连接串来自 appsettings.json，只读展示。" />
+
+                <!-- ============ 外观 ============ -->
+                <Border Style="{StaticResource CardStyle}">
+                    <StackPanel Spacing="12">
+                        <TextBlock Style="{StaticResource CardTitleTextStyle}" Text="外观" />
+
+                        <Grid ColumnSpacing="16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="140" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock
+                                Grid.Column="0"
+                                VerticalAlignment="Center"
+                                Style="{StaticResource FormLabelTextStyle}"
+                                Text="主题" />
+
+                            <StackPanel Grid.Column="1" Spacing="4">
+                                <ComboBox
+                                    Width="200"
+                                    DisplayMemberPath="Text"
+                                    ItemsSource="{x:Bind Vm.ThemeOptions}"
+                                    SelectedItem="{x:Bind Vm.SelectedTheme, Mode=TwoWay}" />
+                                <TextBlock
+                                    Style="{StaticResource CardCaptionTextStyle}"
+                                    Text="选「跟随系统」时，系统切换深色模式应用会立即跟上。" />
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- ============ 窗口 ============ -->
+                <Border Style="{StaticResource CardStyle}">
+                    <StackPanel Spacing="12">
+                        <TextBlock Style="{StaticResource CardTitleTextStyle}" Text="窗口" />
+
+                        <ToggleSwitch
+                            Header="记住窗口位置和大小"
+                            IsOn="{x:Bind Vm.RememberWindowState, Mode=TwoWay}"
+                            OffContent="关闭后每次启动都用默认尺寸"
+                            OnContent="关闭应用时保存，下次启动还原" />
+                    </StackPanel>
+                </Border>
+
+                <!-- ============ 文件与目录 ============ -->
+                <Border Style="{StaticResource CardStyle}">
+                    <StackPanel Spacing="12">
+                        <TextBlock Style="{StaticResource CardTitleTextStyle}" Text="文件与目录" />
+
+                        <StackPanel Spacing="8">
+                            <TextBlock Style="{StaticResource FormLabelTextStyle}" Text="导出目录" />
+
+                            <Grid ColumnSpacing="8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <TextBox
+                                    Grid.Column="0"
+                                    PlaceholderText="留空则使用默认目录"
+                                    Text="{x:Bind Vm.ExportDirectory, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+
+                                <Button
+                                    Grid.Column="1"
+                                    Command="{x:Bind Vm.ChooseExportDirectoryCommand}"
+                                    Content="浏览…"
+                                    Style="{StaticResource ToolbarButtonStyle}" />
+
+                                <Button
+                                    Grid.Column="2"
+                                    Command="{x:Bind Vm.ApplyExportDirectoryCommand}"
+                                    Content="应用"
+                                    Style="{StaticResource ToolbarButtonStyle}" />
+                            </Grid>
+
+                            <TextBlock
+                                Style="{StaticResource CardCaptionTextStyle}"
+                                Text="{x:Bind Vm.EffectiveExportDirectory, Mode=OneWay}"
+                                TextWrapping="Wrap" />
+                        </StackPanel>
+
+                        <!-- 配置 / 日志 / 导出三个目录都提供「打开」入口，
+                             比让用户自己去翻 AppData 友好得多。 -->
+                        <Grid ColumnSpacing="8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <Button
+                                Grid.Column="0"
+                                Command="{x:Bind Vm.OpenExportDirectoryCommand}"
+                                Style="{StaticResource ToolbarButtonStyle}">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon FontSize="14" Glyph="&#xE838;" />
+                                    <TextBlock Text="打开导出目录" />
+                                </StackPanel>
+                            </Button>
+
+                            <Button
+                                Grid.Column="1"
+                                Command="{x:Bind Vm.OpenSettingsFolderCommand}"
+                                Style="{StaticResource ToolbarButtonStyle}">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon FontSize="14" Glyph="&#xE713;" />
+                                    <TextBlock Text="打开配置目录" />
+                                </StackPanel>
+                            </Button>
+
+                            <Button
+                                Grid.Column="2"
+                                Command="{x:Bind Vm.OpenLogFolderCommand}"
+                                Style="{StaticResource ToolbarButtonStyle}">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon FontSize="14" Glyph="&#xE9D9;" />
+                                    <TextBlock Text="打开日志目录" />
+                                </StackPanel>
+                            </Button>
+
+                            <Button
+                                Grid.Column="3"
+                                Command="{x:Bind Vm.ResetExportDirectoryCommand}"
+                                Content="恢复默认"
+                                Style="{StaticResource ToolbarButtonStyle}" />
+                        </Grid>
+
+                        <TextBlock
+                            Style="{StaticResource CardCaptionTextStyle}"
+                            Text="{x:Bind Vm.SettingsFilePath, Mode=OneWay}"
+                            TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
+                </Border>
+
+                <!-- ============ 数据库 ============ -->
+                <Border Style="{StaticResource CardStyle}">
+                    <StackPanel Spacing="12">
+                        <TextBlock Style="{StaticResource CardTitleTextStyle}" Text="数据库" />
+
+                        <Grid ColumnSpacing="16" RowSpacing="8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="140" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <TextBlock
+                                Grid.Row="0"
+                                Grid.Column="0"
+                                VerticalAlignment="Center"
+                                Style="{StaticResource FormLabelTextStyle}"
+                                Text="服务器" />
+                            <TextBlock
+                                Grid.Row="0"
+                                Grid.Column="1"
+                                VerticalAlignment="Center"
+                                Style="{StaticResource TableCellTextStyle}"
+                                Text="{x:Bind Vm.DatabaseServer}" />
+
+                            <TextBlock
+                                Grid.Row="1"
+                                Grid.Column="0"
+                                VerticalAlignment="Center"
+                                Style="{StaticResource FormLabelTextStyle}"
+                                Text="账号" />
+                            <TextBlock
+                                Grid.Row="1"
+                                Grid.Column="1"
+                                VerticalAlignment="Center"
+                                Style="{StaticResource TableCellTextStyle}"
+                                Text="{x:Bind Vm.DatabaseUser}" />
+
+                            <TextBlock
+                                Grid.Row="2"
+                                Grid.Column="0"
+                                VerticalAlignment="Center"
+                                Style="{StaticResource FormLabelTextStyle}"
+                                Text="默认每页条数" />
+                            <TextBlock
+                                Grid.Row="2"
+                                Grid.Column="1"
+                                VerticalAlignment="Center"
+                                Style="{StaticResource TableCellTextStyle}"
+                                Text="{x:Bind Vm.DefaultPageSize}" />
+                        </Grid>
+
+                        <Button
+                            Command="{x:Bind Vm.TestConnectionCommand}"
+                            Style="{StaticResource ToolbarButtonStyle}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon FontSize="14" Glyph="&#xE95F;" />
+                                <TextBlock Text="测试连接" />
+                            </StackPanel>
+                        </Button>
+
+                        <InfoBar
+                            IsOpen="{x:Bind Vm.IsConnectionMessageOpen, Mode=TwoWay}"
+                            Message="{x:Bind Vm.ConnectionMessage, Mode=OneWay}"
+                            Severity="{x:Bind Vm.ConnectionSeverity, Mode=OneWay}"
+                            Title="连接测试" />
+                    </StackPanel>
+                </Border>
+
+            </StackPanel>
+        </ScrollViewer>
+
+        <controls:BusyOverlay IsActive="{x:Bind Vm.IsBusy, Mode=OneWay}" Text="正在测试…" />
+    </Grid>
+</views:PageBase>

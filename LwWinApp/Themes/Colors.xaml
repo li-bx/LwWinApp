@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!--
+        颜色资源。
+
+        这里只定义 WinUI 没有内置的东西：品牌色、卡片、表格专用的几种画刷。
+        文字色、控件填充色、分隔线一律用系统内置的（TextFillColorPrimaryBrush、
+        ControlFillColorDefaultBrush、DividerStrokeColorDefaultBrush 等），
+        这样跟随系统主题和高对比度模式时不会掉链子。
+
+        每个键都要在 Light / Dark 两套里都出现。只写在一边的话，
+        切主题时另一边会取不到值，绑定表现为「颜色突然变成透明」。
+    -->
+    <ResourceDictionary.ThemeDictionaries>
+
+        <ResourceDictionary x:Key="Light">
+            <!-- 品牌色 -->
+            <Color x:Key="BrandPrimaryColor">#0F6CBD</Color>
+            <Color x:Key="BrandPrimaryHoverColor">#1A7AD4</Color>
+            <Color x:Key="BrandPrimaryPressedColor">#0B5A9E</Color>
+            <Color x:Key="BrandSubtleColor">#EAF3FC</Color>
+
+            <SolidColorBrush x:Key="BrandPrimaryBrush" Color="{StaticResource BrandPrimaryColor}" />
+            <SolidColorBrush x:Key="BrandPrimaryHoverBrush" Color="{StaticResource BrandPrimaryHoverColor}" />
+            <SolidColorBrush x:Key="BrandPrimaryPressedBrush" Color="{StaticResource BrandPrimaryPressedColor}" />
+            <SolidColorBrush x:Key="BrandSubtleBrush" Color="{StaticResource BrandSubtleColor}" />
+
+            <!-- 卡片 -->
+            <SolidColorBrush x:Key="CardBackgroundBrush" Color="#B3FFFFFF" />
+            <SolidColorBrush x:Key="CardBackgroundHoverBrush" Color="#F2FFFFFF" />
+            <SolidColorBrush x:Key="CardBorderBrush" Color="#1A000000" />
+            <SolidColorBrush x:Key="CardShadowBrush" Color="#14000000" />
+
+            <!-- 表格 -->
+            <SolidColorBrush x:Key="TableHeaderBackgroundBrush" Color="#F3F3F3" />
+            <SolidColorBrush x:Key="TableRowAltBrush" Color="#08000000" />
+            <SolidColorBrush x:Key="TableRowHoverBrush" Color="#0F000000" />
+            <SolidColorBrush x:Key="TableRowSelectedBrush" Color="#1F0F6CBD" />
+            <SolidColorBrush x:Key="TableBorderBrush" Color="#19000000" />
+
+            <!-- 语义色 -->
+            <SolidColorBrush x:Key="SuccessBrush" Color="#0F7B0F" />
+            <SolidColorBrush x:Key="SuccessSubtleBrush" Color="#DFF6DD" />
+            <SolidColorBrush x:Key="WarningBrush" Color="#9D5D00" />
+            <SolidColorBrush x:Key="WarningSubtleBrush" Color="#FFF4CE" />
+            <SolidColorBrush x:Key="DangerBrush" Color="#C42B1C" />
+            <SolidColorBrush x:Key="DangerSubtleBrush" Color="#FDE7E9" />
+            <SolidColorBrush x:Key="InfoBrush" Color="#0F6CBD" />
+            <SolidColorBrush x:Key="InfoSubtleBrush" Color="#EAF3FC" />
+
+            <!--
+                InfoBar 的底色与文字色。这六个都是 WinUI 内置的轻量样式键，
+                默认值是一组浅底 + 近黑字（亮色主题下浅底正好和上面那几个 Subtle 画刷同值），
+                这里把底色刻意换成**实色**：级别一眼认得出，所以文字也要跟着换成白色。
+
+                写 `Background` 属性是没用的 —— 底色出自模板的视觉状态，只能覆盖这几个键。
+                实测（改完逐条截图 + 用 UIA 读文字色比对过）：这四个键能把四种级别的底色
+                全部换成实色；文字色靠 InfoBarTitleForeground / InfoBarMessageForeground，
+                连页面里手写的 InfoBar 一起管住，不用每处再自己设 Foreground。
+
+                关闭按钮上那个叉**不在这几个键的管辖范围**：模板给那个 Button 单独挂了一套
+                资源（ButtonForeground → AppBarButtonForeground），连 hover / pressed 也是
+                那套在管，所以由 NotificationService 在 InfoBar 加载后自己去换掉（见 PaintCloseButton）。
+
+                深色主题取**同一组值**：这几个都是中间调，两种主题上都压得住白字。
+            -->
+            <SolidColorBrush x:Key="InfoBarInformationalSeverityBackgroundBrush" Color="#0F6CBD" />
+            <SolidColorBrush x:Key="InfoBarSuccessSeverityBackgroundBrush" Color="#0F7B0F" />
+            <SolidColorBrush x:Key="InfoBarWarningSeverityBackgroundBrush" Color="#9D5D00" />
+            <SolidColorBrush x:Key="InfoBarErrorSeverityBackgroundBrush" Color="#C42B1C" />
+            <SolidColorBrush x:Key="InfoBarTitleForeground" Color="#FFFFFF" />
+            <SolidColorBrush x:Key="InfoBarMessageForeground" Color="#FFFFFF" />
+
+            <!-- 轻提示卡片：比普通卡片实一点，浮在内容上方要看得清 -->
+            <SolidColorBrush x:Key="ToastCardBackgroundBrush" Color="#FFFFFF" />
+            <SolidColorBrush x:Key="CodeBackgroundBrush" Color="#F6F6F6" />
+
+            <!-- 忙碌遮罩的底色。半透明，让下面的内容还能看出个轮廓。 -->
+            <SolidColorBrush x:Key="OverlayBackgroundBrush" Color="#B8F3F3F3" />
+        </ResourceDictionary>
+
+        <ResourceDictionary x:Key="Dark">
+            <Color x:Key="BrandPrimaryColor">#4CA0E0</Color>
+            <Color x:Key="BrandPrimaryHoverColor">#63B0EC</Color>
+            <Color x:Key="BrandPrimaryPressedColor">#3A8CC9</Color>
+            <Color x:Key="BrandSubtleColor">#1F2E3D</Color>
+
+            <SolidColorBrush x:Key="BrandPrimaryBrush" Color="{StaticResource BrandPrimaryColor}" />
+            <SolidColorBrush x:Key="BrandPrimaryHoverBrush" Color="{StaticResource BrandPrimaryHoverColor}" />
+            <SolidColorBrush x:Key="BrandPrimaryPressedBrush" Color="{StaticResource BrandPrimaryPressedColor}" />
+            <SolidColorBrush x:Key="BrandSubtleBrush" Color="{StaticResource BrandSubtleColor}" />
+
+            <SolidColorBrush x:Key="CardBackgroundBrush" Color="#0DFFFFFF" />
+            <SolidColorBrush x:Key="CardBackgroundHoverBrush" Color="#1AFFFFFF" />
+            <SolidColorBrush x:Key="CardBorderBrush" Color="#1FFFFFFF" />
+            <SolidColorBrush x:Key="CardShadowBrush" Color="#40000000" />
+
+            <SolidColorBrush x:Key="TableHeaderBackgroundBrush" Color="#14FFFFFF" />
+            <SolidColorBrush x:Key="TableRowAltBrush" Color="#08FFFFFF" />
+            <SolidColorBrush x:Key="TableRowHoverBrush" Color="#12FFFFFF" />
+            <SolidColorBrush x:Key="TableRowSelectedBrush" Color="#334CA0E0" />
+            <SolidColorBrush x:Key="TableBorderBrush" Color="#1FFFFFFF" />
+
+            <SolidColorBrush x:Key="SuccessBrush" Color="#6CCB5F" />
+            <SolidColorBrush x:Key="SuccessSubtleBrush" Color="#1B2E1B" />
+            <SolidColorBrush x:Key="WarningBrush" Color="#FCE100" />
+            <SolidColorBrush x:Key="WarningSubtleBrush" Color="#332A12" />
+            <SolidColorBrush x:Key="DangerBrush" Color="#FF99A4" />
+            <SolidColorBrush x:Key="DangerSubtleBrush" Color="#3A1D1D" />
+            <SolidColorBrush x:Key="InfoBrush" Color="#4CA0E0" />
+            <SolidColorBrush x:Key="InfoSubtleBrush" Color="#1B2A3A" />
+
+            <!-- 同亮色主题：InfoBar 的底色与文字色用同一组值（中间调实色 + 白字）。理由见上面。 -->
+            <SolidColorBrush x:Key="InfoBarInformationalSeverityBackgroundBrush" Color="#0F6CBD" />
+            <SolidColorBrush x:Key="InfoBarSuccessSeverityBackgroundBrush" Color="#0F7B0F" />
+            <SolidColorBrush x:Key="InfoBarWarningSeverityBackgroundBrush" Color="#9D5D00" />
+            <SolidColorBrush x:Key="InfoBarErrorSeverityBackgroundBrush" Color="#C42B1C" />
+            <SolidColorBrush x:Key="InfoBarTitleForeground" Color="#FFFFFF" />
+            <SolidColorBrush x:Key="InfoBarMessageForeground" Color="#FFFFFF" />
+
+            <SolidColorBrush x:Key="ToastCardBackgroundBrush" Color="#2B2B2B" />
+            <SolidColorBrush x:Key="CodeBackgroundBrush" Color="#1F1F1F" />
+            <SolidColorBrush x:Key="OverlayBackgroundBrush" Color="#B8202020" />
+        </ResourceDictionary>
+
+    </ResourceDictionary.ThemeDictionaries>
+
+</ResourceDictionary>

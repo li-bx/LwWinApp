@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="utf-8"?>
+<views:PageBase
+    x:Class="LwWinApp.Views.Demo.FormValidationPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:controls="using:LwWinApp.Controls"
+    xmlns:views="using:LwWinApp.Views"
+    mc:Ignorable="d">
+
+    <Grid>
+        <ScrollViewer Padding="24" VerticalScrollBarVisibility="Auto">
+            <StackPanel MaxWidth="880" HorizontalAlignment="Left" Spacing="16">
+
+                <controls:PageHeader
+                    Title="表单校验"
+                    Description="字段级提示随输入即时出现，提交时再整体校一遍，并把所有问题汇总到顶部 —— 用户不用在长表单里逐行找红字。">
+                    <controls:PageHeader.Actions>
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Button Command="{x:Bind Vm.FillInvalidCommand}" Style="{StaticResource ToolbarButtonStyle}">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon FontSize="14" Glyph="&#xE7BA;" />
+                                    <TextBlock Text="填入非法数据" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </controls:PageHeader.Actions>
+                </controls:PageHeader>
+
+                <!-- 提交后的整体结果 -->
+                <InfoBar
+                    IsClosable="False"
+                    IsOpen="{x:Bind Vm.ShowErrors, Mode=OneWay}"
+                    IsTabStop="False"
+                    Message="{x:Bind Vm.ErrorSummary, Mode=OneWay}"
+                    Severity="Error"
+                    Title="请修正以下问题" />
+
+                <InfoBar
+                    IsClosable="False"
+                    IsOpen="{x:Bind Vm.HasSubmitted, Mode=OneWay}"
+                    Message="{x:Bind Vm.SubmittedSummary, Mode=OneWay}"
+                    Severity="Success"
+                    Title="提交成功" />
+
+                <Border Style="{StaticResource CardStyle}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource SectionTitleTextStyle}" Text="注册信息" />
+
+                        <Grid ColumnSpacing="20">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <!-- 登录账号 -->
+                            <StackPanel Grid.Column="0" Style="{StaticResource FormFieldPanelStyle}">
+                                <TextBlock Style="{StaticResource FormLabelTextStyle}" Text="登录账号 *" />
+                                <TextBox
+                                    PlaceholderText="字母开头，3~20 位"
+                                    Text="{x:Bind Vm.Form.LoginName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBlock
+                                    Foreground="{ThemeResource DangerBrush}"
+                                    Style="{StaticResource HintTextStyle}"
+                                    Text="{x:Bind Vm.LoginNameError, Mode=OneWay}"
+                                    Visibility="{x:Bind Vm.LoginNameError, Mode=OneWay, Converter={StaticResource StringToVisibilityConverter}}" />
+                            </StackPanel>
+
+                            <!-- 姓名 -->
+                            <StackPanel Grid.Column="1" Style="{StaticResource FormFieldPanelStyle}">
+                                <TextBlock Style="{StaticResource FormLabelTextStyle}" Text="姓名 *" />
+                                <TextBox Text="{x:Bind Vm.Form.RealName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBlock
+                                    Foreground="{ThemeResource DangerBrush}"
+                                    Style="{StaticResource HintTextStyle}"
+                                    Text="{x:Bind Vm.RealNameError, Mode=OneWay}"
+                                    Visibility="{x:Bind Vm.RealNameError, Mode=OneWay, Converter={StaticResource StringToVisibilityConverter}}" />
+                            </StackPanel>
+                        </Grid>
+
+                        <Grid ColumnSpacing="20">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <!-- 邮箱 -->
+                            <StackPanel Grid.Column="0" Style="{StaticResource FormFieldPanelStyle}">
+                                <TextBlock Style="{StaticResource FormLabelTextStyle}" Text="邮箱 *" />
+                                <TextBox
+                                    PlaceholderText="name@example.com"
+                                    Text="{x:Bind Vm.Form.Email, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBlock
+                                    Foreground="{ThemeResource DangerBrush}"
+                                    Style="{StaticResource HintTextStyle}"
+                                    Text="{x:Bind Vm.EmailError, Mode=OneWay}"
+                                    Visibility="{x:Bind Vm.EmailError, Mode=OneWay, Converter={StaticResource StringToVisibilityConverter}}" />
+                            </StackPanel>
+
+                            <!-- 手机号 -->
+                            <StackPanel Grid.Column="1" Style="{StaticResource FormFieldPanelStyle}">
+                                <TextBlock Style="{StaticResource FormLabelTextStyle}" Text="手机号 *" />
+                                <TextBox
+                                    PlaceholderText="11 位手机号"
+                                    Text="{x:Bind Vm.Form.Phone, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBlock
+                                    Foreground="{ThemeResource DangerBrush}"
+                                    Style="{StaticResource HintTextStyle}"
+                                    Text="{x:Bind Vm.PhoneError, Mode=OneWay}"
+                                    Visibility="{x:Bind Vm.PhoneError, Mode=OneWay, Converter={StaticResource StringToVisibilityConverter}}" />
+                            </StackPanel>
+                        </Grid>
+
+                        <Grid ColumnSpacing="20">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <!-- 密码 -->
+                            <StackPanel Grid.Column="0" Style="{StaticResource FormFieldPanelStyle}">
+                                <TextBlock Style="{StaticResource FormLabelTextStyle}" Text="密码 *" />
+                                <PasswordBox
+                                    Password="{x:Bind Vm.Form.Password, Mode=TwoWay}"
+                                    PasswordChanged="OnPasswordChanged"
+                                    PlaceholderText="至少 6 位，含字母和数字" />
+                                <TextBlock
+                                    Foreground="{ThemeResource DangerBrush}"
+                                    Style="{StaticResource HintTextStyle}"
+                                    Text="{x:Bind Vm.PasswordError, Mode=OneWay}"
+                                    Visibility="{x:Bind Vm.PasswordError, Mode=OneWay, Converter={StaticResource StringToVisibilityConverter}}" />
+                            </StackPanel>
+
+                            <!-- 确认密码 -->
+                            <StackPanel Grid.Column="1" Style="{StaticResource FormFieldPanelStyle}">
+                                <TextBlock Style="{StaticResource FormLabelTextStyle}" Text="确认密码 *" />
+                                <PasswordBox
+                                    Password="{x:Bind Vm.Form.ConfirmPassword, Mode=TwoWay}"
+                                    PasswordChanged="OnConfirmPasswordChanged"
+                                    PlaceholderText="再输一次" />
+                                <TextBlock
+                                    Foreground="{ThemeResource DangerBrush}"
+                                    Style="{StaticResource HintTextStyle}"
+                                    Text="{x:Bind Vm.ConfirmPasswordError, Mode=OneWay}"
+                                    Visibility="{x:Bind Vm.ConfirmPasswordError, Mode=OneWay, Converter={StaticResource StringToVisibilityConverter}}" />
+                            </StackPanel>
+                        </Grid>
+
+                        <Grid ColumnSpacing="20">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0" Style="{StaticResource FormFieldPanelStyle}">
+                                <TextBlock Style="{StaticResource FormLabelTextStyle}" Text="年龄" />
+                                <NumberBox
+                                    Maximum="120"
+                                    Minimum="1"
+                                    SpinButtonPlacementMode="Compact"
+                                    Value="{x:Bind Vm.Form.Age, Mode=TwoWay}" />
+                                <TextBlock
+                                    Foreground="{ThemeResource DangerBrush}"
+                                    Style="{StaticResource HintTextStyle}"
+                                    Text="{x:Bind Vm.AgeError, Mode=OneWay}"
+                                    Visibility="{x:Bind Vm.AgeError, Mode=OneWay, Converter={StaticResource StringToVisibilityConverter}}" />
+                            </StackPanel>
+                        </Grid>
+
+                        <StackPanel Style="{StaticResource FormFieldPanelStyle}">
+                            <CheckBox Content="我已阅读并同意服务条款" IsChecked="{x:Bind Vm.Form.AcceptTerms, Mode=TwoWay}" />
+                            <TextBlock
+                                Foreground="{ThemeResource DangerBrush}"
+                                Style="{StaticResource HintTextStyle}"
+                                Text="{x:Bind Vm.AcceptTermsError, Mode=OneWay}"
+                                Visibility="{x:Bind Vm.AcceptTermsError, Mode=OneWay, Converter={StaticResource StringToVisibilityConverter}}" />
+                        </StackPanel>
+
+                        <StackPanel
+                            Margin="0,8,0,0"
+                            Orientation="Horizontal"
+                            Spacing="10">
+                            <Button Command="{x:Bind Vm.SubmitCommand}" Style="{StaticResource ToolbarButtonStyle}">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon FontSize="14" Glyph="&#xE73E;" />
+                                    <TextBlock Text="提交" />
+                                </StackPanel>
+                            </Button>
+                            <Button Command="{x:Bind Vm.ResetCommand}" Content="重置" Style="{StaticResource ToolbarButtonStyle}" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- ============ 说明 ============ -->
+                <Border Style="{StaticResource CardStyle}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource SectionTitleTextStyle}" Text="校验规则写在哪里" />
+                        <TextBlock
+                            Style="{StaticResource CardCaptionTextStyle}"
+                            Text="规则和字段写在一起（数据注解），跨字段的规则（两次密码是否一致）放在提交逻辑里。界面层的即时提示只是体验，真正的把关必须在提交那一步 —— 界面层是可以被绕过的。" />
+
+                        <Border Style="{StaticResource CodeBlockStyle}">
+                            <TextBlock Style="{StaticResource CodeTextStyle}">
+public sealed partial class RegistrationForm : ObservableValidator
+{
+    [ObservableProperty]
+    [Required(ErrorMessage = "登录账号不能为空")]
+    [MinLength(3, ErrorMessage = "登录账号至少 3 个字符")]
+    [RegularExpression(RegexHelper.UserNameText, ErrorMessage = "只能包含字母、数字和下划线")]
+    private string _loginName = string.Empty;
+}
+
+// 提交前再整体校一遍：用户没改过任何字段时，setter 里的校验根本没跑过。
+Form.ValidateAllProperties();</TextBlock>
+                        </Border>
+                    </StackPanel>
+                </Border>
+
+            </StackPanel>
+        </ScrollViewer>
+
+        <controls:BusyOverlay IsActive="{x:Bind Vm.IsBusy, Mode=OneWay}" Text="正在提交…" />
+    </Grid>
+</views:PageBase>

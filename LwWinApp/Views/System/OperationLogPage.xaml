@@ -1,0 +1,256 @@
+<?xml version="1.0" encoding="utf-8"?>
+<views:PageBase
+    x:Class="LwWinApp.Views.System.OperationLogPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:controls="using:LwWinApp.Controls"
+    xmlns:entities="using:LwWinApp.Models.Entities"
+    xmlns:views="using:LwWinApp.Views"
+    mc:Ignorable="d">
+
+    <Grid Padding="24" RowSpacing="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <controls:PageHeader
+            Grid.Row="0"
+            Title="操作日志"
+            Description="只读大表格 + 多条件筛选 + 分页。种子数据给了两百多条，正好能把分页翻起来。">
+            <controls:PageHeader.Actions>
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Button Command="{x:Bind Vm.ExportCommand}" Style="{StaticResource ToolbarButtonStyle}">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon FontSize="14" Glyph="&#xE896;" />
+                            <TextBlock Text="导出" />
+                        </StackPanel>
+                    </Button>
+
+                    <Button Command="{x:Bind Vm.CleanupCommand}" Style="{StaticResource DangerButtonStyle}">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon FontSize="14" Glyph="&#xE74D;" />
+                            <TextBlock Text="清理 30 天前" />
+                        </StackPanel>
+                    </Button>
+
+                    <Button
+                        Command="{x:Bind Vm.RefreshCommand}"
+                        Style="{StaticResource ToolbarButtonStyle}"
+                        ToolTipService.ToolTip="重新加载">
+                        <FontIcon FontSize="14" Glyph="&#xE72C;" />
+                    </Button>
+                </StackPanel>
+            </controls:PageHeader.Actions>
+        </controls:PageHeader>
+
+        <!-- ============ 筛选条 ============ -->
+        <Border Grid.Row="1" Style="{StaticResource ToolbarStyle}">
+            <StackPanel Spacing="8">
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                    <TextBox
+                        Width="220"
+                        KeyDown="OnKeywordKeyDown"
+                        PlaceholderText="内容 / 操作人 / IP"
+                        Text="{x:Bind Vm.Keyword, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+
+                    <ComboBox
+                        Width="130"
+                        DisplayMemberPath="Text"
+                        ItemsSource="{x:Bind Vm.LevelFilterOptions}"
+                        SelectedItem="{x:Bind Vm.SelectedLevel, Mode=TwoWay}" />
+
+                    <ComboBox
+                        Width="150"
+                        DisplayMemberPath="Text"
+                        ItemsSource="{x:Bind Vm.ModuleFilterOptions, Mode=OneWay}"
+                        SelectedItem="{x:Bind Vm.SelectedModule, Mode=TwoWay}" />
+
+                    <CalendarDatePicker
+                        Width="150"
+                        Date="{x:Bind Vm.FromDate, Mode=TwoWay}"
+                        PlaceholderText="起始日期" />
+
+                    <TextBlock
+                        VerticalAlignment="Center"
+                        Style="{StaticResource CardCaptionTextStyle}"
+                        Text="至" />
+
+                    <CalendarDatePicker
+                        Width="150"
+                        Date="{x:Bind Vm.ToDate, Mode=TwoWay}"
+                        PlaceholderText="截止日期" />
+
+                    <Button Command="{x:Bind Vm.SearchCommand}" Style="{StaticResource ToolbarButtonStyle}">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon FontSize="14" Glyph="&#xE721;" />
+                            <TextBlock Text="查询" />
+                        </StackPanel>
+                    </Button>
+
+                    <Button
+                        Command="{x:Bind Vm.ResetFilterCommand}"
+                        IsEnabled="{x:Bind Vm.HasFilter, Mode=OneWay}"
+                        Content="重置"
+                        Style="{StaticResource ToolbarButtonStyle}" />
+                </StackPanel>
+
+                <!-- 日期区间填反了提前拦住，否则用户只会看到一个空列表 -->
+                <InfoBar
+                    IsClosable="False"
+                    IsOpen="{x:Bind Vm.HasDateRangeError, Mode=OneWay}"
+                    Message="{x:Bind Vm.DateRangeError, Mode=OneWay}"
+                    Severity="Warning" />
+            </StackPanel>
+        </Border>
+
+        <!-- ============ 表格 ============ -->
+        <Border
+            Grid.Row="2"
+            Padding="0"
+            Style="{StaticResource CardStyle}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <Border Grid.Row="0" Style="{StaticResource TableHeaderBorderStyle}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="170" />
+                            <ColumnDefinition Width="80" />
+                            <ColumnDefinition Width="130" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="110" />
+                            <ColumnDefinition Width="130" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Grid.Column="0" Style="{StaticResource TableHeaderTextStyle}" Text="时间" />
+                        <TextBlock Grid.Column="1" Style="{StaticResource TableHeaderTextStyle}" Text="等级" />
+                        <TextBlock Grid.Column="2" Style="{StaticResource TableHeaderTextStyle}" Text="模块" />
+                        <TextBlock Grid.Column="3" Style="{StaticResource TableHeaderTextStyle}" Text="内容" />
+                        <TextBlock Grid.Column="4" Style="{StaticResource TableHeaderTextStyle}" Text="操作人" />
+                        <TextBlock Grid.Column="5" Style="{StaticResource TableHeaderTextStyle}" Text="IP" />
+                    </Grid>
+                </Border>
+
+                <TextBlock
+                    Grid.Row="1"
+                    Margin="0,40,0,0"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Top"
+                    Style="{StaticResource CardCaptionTextStyle}"
+                    Text="{x:Bind Vm.EmptyHint, Mode=OneWay}"
+                    Visibility="{x:Bind Vm.Items, Mode=OneWay, Converter={StaticResource EmptyCollectionToVisibilityConverter}}" />
+
+                <ListView
+                    Grid.Row="1"
+                    ItemContainerStyle="{StaticResource TableRowStyle}"
+                    ItemsSource="{x:Bind Vm.Items, Mode=OneWay}"
+                    SelectedItem="{x:Bind Vm.SelectedLog, Mode=TwoWay}"
+                    SelectionMode="Single"
+                    DoubleTapped="OnRowDoubleTapped">
+                    <ListView.ItemTemplate>
+                        <DataTemplate x:DataType="entities:SysLog">
+                            <Grid Height="40">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="170" />
+                                    <ColumnDefinition Width="80" />
+                                    <ColumnDefinition Width="130" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="110" />
+                                    <ColumnDefinition Width="130" />
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock
+                                    Grid.Column="0"
+                                    Style="{StaticResource TableCellTextStyle}"
+                                    Text="{x:Bind CreateTimeText}" />
+
+                                <!-- 等级徽标：错误和警告用颜色标出来 -->
+                                <Border
+                                    Grid.Column="1"
+                                    Margin="12,0"
+                                    Padding="8,2"
+                                    HorizontalAlignment="Left"
+                                    VerticalAlignment="Center"
+                                    Background="{ThemeResource DangerSubtleBrush}"
+                                    CornerRadius="10"
+                                    Visibility="{x:Bind IsProblem}">
+                                    <TextBlock
+                                        FontSize="12"
+                                        Foreground="{ThemeResource DangerBrush}"
+                                        Text="{x:Bind LevelText}" />
+                                </Border>
+
+                                <Border
+                                    Grid.Column="1"
+                                    Margin="12,0"
+                                    Padding="8,2"
+                                    HorizontalAlignment="Left"
+                                    VerticalAlignment="Center"
+                                    Background="{ThemeResource WarningSubtleBrush}"
+                                    CornerRadius="10"
+                                    Visibility="{x:Bind IsWarning}">
+                                    <TextBlock
+                                        FontSize="12"
+                                        Foreground="{ThemeResource WarningBrush}"
+                                        Text="{x:Bind LevelText}" />
+                                </Border>
+
+                                <Border
+                                    Grid.Column="1"
+                                    Margin="12,0"
+                                    Padding="8,2"
+                                    HorizontalAlignment="Left"
+                                    VerticalAlignment="Center"
+                                    Background="{ThemeResource TableRowAltBrush}"
+                                    CornerRadius="10"
+                                    Visibility="{x:Bind IsNormal}">
+                                    <TextBlock
+                                        FontSize="12"
+                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                        Text="{x:Bind LevelText}" />
+                                </Border>
+
+                                <TextBlock
+                                    Grid.Column="2"
+                                    Style="{StaticResource TableCellTextStyle}"
+                                    Text="{x:Bind Module}" />
+                                <TextBlock
+                                    Grid.Column="3"
+                                    Style="{StaticResource TableCellTextStyle}"
+                                    Text="{x:Bind Message}" />
+                                <TextBlock
+                                    Grid.Column="4"
+                                    Style="{StaticResource TableCellTextStyle}"
+                                    Text="{x:Bind UserNameDisplay}" />
+                                <TextBlock
+                                    Grid.Column="5"
+                                    Style="{StaticResource TableCellTextStyle}"
+                                    Text="{x:Bind IpDisplay}" />
+                            </Grid>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </Grid>
+        </Border>
+
+        <controls:Pager
+            Grid.Row="3"
+            PageIndex="{x:Bind Vm.PageIndex, Mode=TwoWay}"
+            PageSize="{x:Bind Vm.PageSize, Mode=TwoWay}"
+            PageSizeOptions="{x:Bind Vm.PageSizeOptions}"
+            Total="{x:Bind Vm.Total, Mode=OneWay}" />
+
+        <controls:BusyOverlay
+            Grid.RowSpan="4"
+            IsActive="{x:Bind Vm.IsBusy, Mode=OneWay}"
+            Text="正在加载日志…" />
+    </Grid>
+</views:PageBase>

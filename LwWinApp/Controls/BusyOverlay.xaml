@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+    x:Class="LwWinApp.Controls.BusyOverlay"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <!--
+        忙碌遮罩。放在页面根 Grid 的最后一个孩子上，盖住整页。
+        默认 Visibility 是 Collapsed：它在设计器里应当是不可见的。
+    -->
+    <Grid x:Name="Root" Visibility="Collapsed">
+        <!-- 半透明底：让下面的内容还能看出轮廓，用户知道只是暂时被挡住。 -->
+        <Rectangle Fill="{ThemeResource OverlayBackgroundBrush}" />
+
+        <StackPanel
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            Spacing="14">
+            <ProgressRing
+                x:Name="Ring"
+                Width="44"
+                Height="44"
+                HorizontalAlignment="Center" />
+            <TextBlock
+                x:Name="MessageText"
+                HorizontalAlignment="Center"
+                Style="{StaticResource BodyTextBlockStyle}"
+                Text="正在加载…" />
+        </StackPanel>
+    </Grid>
+</UserControl>

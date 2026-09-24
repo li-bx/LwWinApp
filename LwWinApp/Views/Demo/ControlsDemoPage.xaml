@@ -1,0 +1,503 @@
+<?xml version="1.0" encoding="utf-8"?>
+<views:PageBase
+    x:Class="LwWinApp.Views.Demo.ControlsDemoPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:controls="using:LwWinApp.Controls"
+    xmlns:demo="using:LwWinApp.ViewModels.Demo"
+    xmlns:views="using:LwWinApp.Views"
+    mc:Ignorable="d">
+
+    <Grid>
+        <ScrollViewer Padding="24" VerticalScrollBarVisibility="Auto">
+            <StackPanel MaxWidth="1180" HorizontalAlignment="Stretch" Spacing="16">
+
+                <controls:PageHeader
+                    Title="常用控件"
+                    Description="表格、下拉框、树、勾选、日期、搜索建议等常用控件，每类都给一个可以直接抄走的用法。">
+                    <controls:PageHeader.Actions>
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Button Command="{x:Bind Vm.ResetAllCommand}" Style="{StaticResource ToolbarButtonStyle}">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon FontSize="14" Glyph="&#xE72C;" />
+                                    <TextBlock Text="恢复默认值" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </controls:PageHeader.Actions>
+                </controls:PageHeader>
+
+                <!-- 所有控件的操作都会反映到这一行，避免「点了没反应」的困惑 -->
+                <InfoBar
+                    IsClosable="False"
+                    IsOpen="True"
+                    Message="{x:Bind Vm.LastAction, Mode=OneWay}"
+                    Severity="Informational"
+                    Title="当前状态" />
+
+                <!-- ============ 下拉框 ============ -->
+                <Border Style="{StaticResource CardStyle}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource SectionTitleTextStyle}" Text="下拉框 ComboBox" />
+                        <TextBlock
+                            Style="{StaticResource CardCaptionTextStyle}"
+                            Text="选项少（一般不超过 15 项）时用它。选项用统一的 SelectOption 承载，页面里不用写值转换器。" />
+
+                        <Grid Margin="0,16,0,0" ColumnSpacing="16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0" Style="{StaticResource FormFieldPanelStyle}">
+                                <TextBlock Style="{StaticResource FormLabelTextStyle}" Text="状态（枚举值）" />
+                                <ComboBox
+                                    HorizontalAlignment="Stretch"
+                                    DisplayMemberPath="Text"
+                                    ItemsSource="{x:Bind Vm.StatusOptions}"
+                                    SelectedItem="{x:Bind Vm.SelectedStatus, Mode=TwoWay}" />
+                                <TextBlock Style="{StaticResource HintTextStyle}" Text="选中项的值可以用 SelectedStatus.AsEnum&lt;EnabledStatus&gt;() 取出来。" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="1" Style="{StaticResource FormFieldPanelStyle}">
+                                <TextBlock Style="{StaticResource FormLabelTextStyle}" Text="性别" />
+                                <ComboBox
+                                    HorizontalAlignment="Stretch"
+                                    DisplayMemberPath="Text"
+                                    ItemsSource="{x:Bind Vm.GenderOptions}"
+                                    SelectedItem="{x:Bind Vm.SelectedGender, Mode=TwoWay}" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="2" Style="{StaticResource FormFieldPanelStyle}">
+                                <TextBlock Style="{StaticResource FormLabelTextStyle}" Text="部门（普通字符串列表）" />
+                                <ComboBox
+                                    HorizontalAlignment="Stretch"
+                                    ItemsSource="{x:Bind Vm.Departments}"
+                                    SelectedItem="{x:Bind Vm.SelectedDepartment, Mode=TwoWay}" />
+                                <TextBlock Style="{StaticResource HintTextStyle}" Text="ItemsSource 也可以直接绑字符串集合。" />
+                            </StackPanel>
+                        </Grid>
+
+                        <Border Style="{StaticResource CodeBlockStyle}">
+                            <TextBlock Style="{StaticResource CodeTextStyle}">
+&lt;ComboBox ItemsSource="{x:Bind Vm.StatusOptions}"
+          SelectedItem="{x:Bind Vm.SelectedStatus, Mode=TwoWay}"
+          DisplayMemberPath="Text" /&gt;</TextBlock>
+                        </Border>
+                    </StackPanel>
+                </Border>
+
+                <!-- ============ 勾选与开关 ============ -->
+                <Border Style="{StaticResource CardStyle}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource SectionTitleTextStyle}" Text="勾选、单选与开关" />
+                        <TextBlock Style="{StaticResource CardCaptionTextStyle}" Text="CheckBox 用于多选，RadioButton 用于互斥，ToggleSwitch 用于「开 / 关」这类状态。" />
+
+                        <Grid Margin="0,16,0,0" ColumnSpacing="24">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Style="{StaticResource FormLabelTextStyle}" Text="多选（CheckBox）" />
+                                <CheckBox Content="加载用户列表" IsChecked="{x:Bind Vm.OptionA, Mode=TwoWay}" />
+                                <CheckBox Content="加载角色列表" IsChecked="{x:Bind Vm.OptionB, Mode=TwoWay}" />
+                                <CheckBox Content="加载部门树" IsChecked="{x:Bind Vm.OptionC, Mode=TwoWay}" />
+                                <TextBlock Style="{StaticResource HintTextStyle}" Text="{x:Bind Vm.CheckedCountText, Mode=OneWay}" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="1">
+                                <TextBlock Style="{StaticResource FormLabelTextStyle}" Text="单选（RadioButton）" />
+                                <RadioButtons SelectedIndex="1">
+                                    <RadioButton Content="每天" />
+                                    <RadioButton Content="每周" />
+                                    <RadioButton Content="每月" />
+                                </RadioButtons>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Style="{StaticResource FormLabelTextStyle}" Text="开关（ToggleSwitch）" />
+                                <ToggleSwitch
+                                    Header="启用高级特性"
+                                    IsOn="{x:Bind Vm.EnableFeature, Mode=TwoWay}"
+                                    OffContent="关闭"
+                                    OnContent="开启" />
+                                <ToggleSwitch
+                                    IsEnabled="{x:Bind Vm.EnableFeature, Mode=OneWay}"
+                                    IsOn="{x:Bind Vm.AgreeTerms, Mode=TwoWay}"
+                                    OffContent="未同意"
+                                    OnContent="已同意"
+                                    Header="同意服务条款" />
+                                <TextBlock Style="{StaticResource HintTextStyle}" Text="下面这个开关是否可用，取决于上面那个 —— 联动就这么写。" />
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- ============ 数值输入 ============ -->
+                <Border Style="{StaticResource CardStyle}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource SectionTitleTextStyle}" Text="数值输入 Slider / NumberBox / RatingControl" />
+
+                        <Grid Margin="0,16,0,0" ColumnSpacing="24">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0" Spacing="14">
+                                <StackPanel>
+                                    <TextBlock Style="{StaticResource FormLabelTextStyle}" Text="{x:Bind Vm.SliderHint, Mode=OneWay}" />
+                                    <Slider
+                                        Maximum="100"
+                                        Minimum="0"
+                                        StepFrequency="5"
+                                        Value="{x:Bind Vm.SliderValue, Mode=TwoWay}" />
+                                </StackPanel>
+
+                                <StackPanel Orientation="Horizontal" Spacing="12">
+                                    <NumberBox
+                                        Width="160"
+                                        Header="并发数"
+                                        Maximum="64"
+                                        Minimum="1"
+                                        SpinButtonPlacementMode="Inline"
+                                        Value="{x:Bind Vm.NumberValue, Mode=TwoWay}" />
+                                    <NumberBox
+                                        Width="160"
+                                        Header="超时（秒）"
+                                        LargeChange="10"
+                                        Maximum="600"
+                                        Minimum="1"
+                                        SmallChange="5"
+                                        SpinButtonPlacementMode="Compact"
+                                        Value="30" />
+                                </StackPanel>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="1" MinWidth="240" Spacing="14">
+                                <StackPanel>
+                                    <TextBlock Style="{StaticResource FormLabelTextStyle}" Text="评分" />
+                                    <RatingControl Value="{x:Bind Vm.RatingValue, Mode=TwoWay}" />
+                                </StackPanel>
+                                <StackPanel>
+                                    <TextBlock Style="{StaticResource FormLabelTextStyle}" Text="不透明度（滑块联动）" />
+                                    <Slider
+                                        Maximum="1"
+                                        Minimum="0.2"
+                                        StepFrequency="0.1"
+                                        Value="{x:Bind Vm.OpacityValue, Mode=TwoWay}" />
+                                    <Border
+                                        Height="36"
+                                        Margin="0,6,0,0"
+                                        Background="{ThemeResource BrandSubtleBrush}"
+                                        CornerRadius="4"
+                                        Opacity="{x:Bind Vm.OpacityValue, Mode=OneWay}" />
+                                </StackPanel>
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- ============ 日期与时间 ============ -->
+                <Border Style="{StaticResource CardStyle}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource SectionTitleTextStyle}" Text="日期与时间" />
+
+                        <Grid Margin="0,16,0,0" ColumnSpacing="16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0" Style="{StaticResource FormFieldPanelStyle}">
+                                <TextBlock Style="{StaticResource FormLabelTextStyle}" Text="日期" />
+                                <DatePicker SelectedDate="{x:Bind Vm.SelectedDate, Mode=TwoWay}" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="1" Style="{StaticResource FormFieldPanelStyle}">
+                                <TextBlock Style="{StaticResource FormLabelTextStyle}" Text="时间" />
+                                <TimePicker
+                                    ClockIdentifier="24HourClock"
+                                    SelectedTime="{x:Bind Vm.SelectedTime, Mode=TwoWay}" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="2" Style="{StaticResource FormFieldPanelStyle}">
+                                <TextBlock Style="{StaticResource FormLabelTextStyle}" Text="年月" />
+                                <DatePicker
+                                    DayVisible="False"
+                                    SelectedDate="{x:Bind Vm.SelectedMonth, Mode=TwoWay}" />
+                            </StackPanel>
+
+                            <StackPanel
+                                Grid.Column="3"
+                                VerticalAlignment="Bottom"
+                                Style="{StaticResource FormFieldPanelStyle}">
+                                <TextBlock Style="{StaticResource FormLabelTextStyle}" Text="当前选择" />
+                                <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="{x:Bind Vm.DateSummary, Mode=OneWay}" />
+                            </StackPanel>
+                        </Grid>
+
+                        <Expander HorizontalAlignment="Stretch" Header="展开日历（CalendarView）">
+                            <!--
+                                CalendarView 的 SelectedDates 是集合，绑不上单个 DateTimeOffset，
+                                所以这里只做展示；要用选中值就走 SelectedDatesChanged 事件。
+                            -->
+                            <CalendarView
+                                x:Name="DemoCalendar"
+                                Margin="0,8,0,0"
+                                HorizontalAlignment="Stretch"
+                                SelectionMode="Single"
+                                SelectedDatesChanged="OnCalendarDateChanged" />
+                        </Expander>
+                    </StackPanel>
+                </Border>
+
+                <!-- ============ 搜索建议 ============ -->
+                <Border Style="{StaticResource CardStyle}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource SectionTitleTextStyle}" Text="搜索建议 AutoSuggestBox" />
+                        <TextBlock
+                            Style="{StaticResource CardCaptionTextStyle}"
+                            Text="输入时给候选，适合「知道大概名字但记不全」的场景。输入「xaml」或「控件」试试。" />
+
+                        <Grid Margin="0,16,0,0" ColumnSpacing="16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <AutoSuggestBox
+                                Grid.Column="0"
+                                VerticalAlignment="Top"
+                                PlaceholderText="输入控件名，例如 NavigationView"
+                                QueryIcon="Find"
+                                TextChanged="OnSuggestionTextChanged"
+                                SuggestionChosen="OnSuggestionChosen"
+                                ItemsSource="{x:Bind Vm.SuggestionBoxItems, Mode=OneWay}">
+                                <AutoSuggestBox.ItemTemplate>
+                                    <DataTemplate x:DataType="demo:SuggestionItem">
+                                        <StackPanel Padding="0,6">
+                                            <TextBlock Style="{StaticResource CardTitleTextStyle}" Text="{x:Bind Text}" />
+                                            <TextBlock Style="{StaticResource CardCaptionTextStyle}" Text="{x:Bind Description}" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </AutoSuggestBox.ItemTemplate>
+                            </AutoSuggestBox>
+
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <TextBlock Style="{StaticResource FormLabelTextStyle}" Text="选中的建议" />
+                                <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="{x:Bind Vm.SelectedSuggestion.Text, Mode=OneWay, FallbackValue=（未选择）}" />
+                                <TextBlock Style="{StaticResource HintTextStyle}" Text="{x:Bind Vm.SelectedSuggestion.Description, Mode=OneWay}" />
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- ============ 自建表格 ============ -->
+                <Border Style="{StaticResource CardStyle}">
+                    <StackPanel>
+                        <Grid ColumnSpacing="16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Style="{StaticResource SectionTitleTextStyle}" Text="数据表格（ListView + 自建表头）" />
+                                <TextBlock
+                                    Style="{StaticResource CardCaptionTextStyle}"
+                                    Text="点表头排序。不引第三方 DataGrid：社区版 DataGrid 停留在 WinAppSDK 1.x 时代，跟当前 SDK 版本有兼容风险，自己搭反而更可控。" />
+                            </StackPanel>
+
+                            <Button
+                                Grid.Column="1"
+                                VerticalAlignment="Top"
+                                Command="{x:Bind Vm.ExportRowsCommand}"
+                                Style="{StaticResource ToolbarButtonStyle}">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon FontSize="14" Glyph="&#xE896;" />
+                                    <TextBlock Text="导出 CSV" />
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+
+                        <!-- 表头 -->
+                        <Border Margin="0,16,0,0" Style="{StaticResource TableHeaderBorderStyle}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="120" />
+                                    <ColumnDefinition Width="110" />
+                                    <ColumnDefinition Width="150" />
+                                </Grid.ColumnDefinitions>
+
+                                <Button
+                                    Grid.Column="0"
+                                    HorizontalAlignment="Stretch"
+                                    HorizontalContentAlignment="Left"
+                                    Command="{x:Bind Vm.SortCommand}"
+                                    CommandParameter="name"
+                                    Style="{StaticResource IconButtonStyle}"
+                                    Width="Auto">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <TextBlock Style="{StaticResource TableHeaderTextStyle}" Text="文件名称" />
+                                        <FontIcon FontSize="11" Glyph="{x:Bind Vm.NameSortGlyph, Mode=OneWay}" />
+                                    </StackPanel>
+                                </Button>
+
+                                <Button
+                                    Grid.Column="1"
+                                    HorizontalAlignment="Stretch"
+                                    HorizontalContentAlignment="Left"
+                                    Command="{x:Bind Vm.SortCommand}"
+                                    CommandParameter="category"
+                                    Style="{StaticResource IconButtonStyle}"
+                                    Width="Auto">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <TextBlock Style="{StaticResource TableHeaderTextStyle}" Text="分类" />
+                                        <FontIcon FontSize="11" Glyph="{x:Bind Vm.CategorySortGlyph, Mode=OneWay}" />
+                                    </StackPanel>
+                                </Button>
+
+                                <Button
+                                    Grid.Column="2"
+                                    HorizontalAlignment="Stretch"
+                                    HorizontalContentAlignment="Left"
+                                    Command="{x:Bind Vm.SortCommand}"
+                                    CommandParameter="size"
+                                    Style="{StaticResource IconButtonStyle}"
+                                    Width="Auto">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <TextBlock Style="{StaticResource TableHeaderTextStyle}" Text="大小" />
+                                        <FontIcon FontSize="11" Glyph="{x:Bind Vm.SizeSortGlyph, Mode=OneWay}" />
+                                    </StackPanel>
+                                </Button>
+
+                                <Button
+                                    Grid.Column="3"
+                                    HorizontalAlignment="Stretch"
+                                    HorizontalContentAlignment="Left"
+                                    Command="{x:Bind Vm.SortCommand}"
+                                    CommandParameter="updated"
+                                    Style="{StaticResource IconButtonStyle}"
+                                    Width="Auto">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <TextBlock Style="{StaticResource TableHeaderTextStyle}" Text="更新时间" />
+                                        <FontIcon FontSize="11" Glyph="{x:Bind Vm.UpdatedSortGlyph, Mode=OneWay}" />
+                                    </StackPanel>
+                                </Button>
+                            </Grid>
+                        </Border>
+
+                        <!--
+                            表格给固定高度并让它自己滚动。
+                            不能让 ListView 待在外层 ScrollViewer 里：那样高度是无限的，
+                            ListView 会一次性实例化所有行，同时虚拟化彻底失效。
+                        -->
+                        <ListView
+                            Height="300"
+                            ItemContainerStyle="{StaticResource TableRowStyle}"
+                            ItemsSource="{x:Bind Vm.Rows, Mode=OneWay}"
+                            SelectedItem="{x:Bind Vm.SelectedRow, Mode=TwoWay}"
+                            SelectionMode="Single">
+                            <ListView.ItemTemplate>
+                                <DataTemplate x:DataType="demo:SortableRow">
+                                    <Grid Height="40" Background="Transparent">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="120" />
+                                            <ColumnDefinition Width="110" />
+                                            <ColumnDefinition Width="150" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <TextBlock
+                                            Grid.Column="0"
+                                            Style="{StaticResource TableCellTextStyle}"
+                                            Text="{x:Bind Name}" />
+                                        <TextBlock
+                                            Grid.Column="1"
+                                            Style="{StaticResource TableCellTextStyle}"
+                                            Text="{x:Bind Category}" />
+                                        <TextBlock
+                                            Grid.Column="2"
+                                            Style="{StaticResource TableCellTextStyle}"
+                                            Text="{x:Bind SizeText}" />
+                                        <TextBlock
+                                            Grid.Column="3"
+                                            Style="{StaticResource TableCellTextStyle}"
+                                            Text="{x:Bind UpdatedText}" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+
+                        <Border Style="{StaticResource CodeBlockStyle}">
+                            <TextBlock Style="{StaticResource CodeTextStyle}">
+&lt;ListView ItemContainerStyle="{StaticResource TableRowStyle}"
+          ItemsSource="{x:Bind Vm.Rows, Mode=OneWay}"&gt;
+    &lt;ListView.ItemTemplate&gt;
+        &lt;DataTemplate x:DataType="demo:SortableRow"&gt;
+            &lt;Grid ColumnDefinitions="*,120,110,150"&gt;…&lt;/Grid&gt;
+        &lt;/DataTemplate&gt;
+    &lt;/ListView.ItemTemplate&gt;
+&lt;/ListView&gt;</TextBlock>
+                        </Border>
+                    </StackPanel>
+                </Border>
+
+                <!-- ============ 折叠与引导 ============ -->
+                <Border Style="{StaticResource CardStyle}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource SectionTitleTextStyle}" Text="折叠面板与引导提示" />
+
+                        <Expander
+                            Margin="0,8,0,0"
+                            HorizontalAlignment="Stretch"
+                            IsExpanded="True">
+                            <Expander.Header>
+                                <StackPanel Orientation="Horizontal" Spacing="10">
+                                    <FontIcon FontSize="14" Glyph="&#xE946;" />
+                                    <TextBlock Text="Expander：默认收起的次要信息" />
+                                </StackPanel>
+                            </Expander.Header>
+                            <TextBlock
+                                Margin="0,8,0,0"
+                                Style="{StaticResource CardCaptionTextStyle}"
+                                Text="把「偶尔才看」的说明、参数、原始报文放进 Expander，主流程就干净了。列表页里的高级筛选也适合这么做。" />
+                        </Expander>
+
+                        <StackPanel
+                            Margin="0,16,0,0"
+                            Orientation="Horizontal"
+                            Spacing="12">
+                            <Button
+                                x:Name="TipAnchorButton"
+                                Click="OnShowTeachingTip"
+                                Content="点我看引导气泡"
+                                Style="{StaticResource ToolbarButtonStyle}" />
+
+                            <TeachingTip
+                                x:Name="DemoTip"
+                                Title="这是 TeachingTip"
+                                Subtitle="指向具体控件的引导。用户明确关掉才消失，比弹对话框温和得多。"
+                                CloseButtonContent="知道了"
+                                IsLightDismissEnabled="True"
+                                Target="{x:Bind TipAnchorButton}" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+            </StackPanel>
+        </ScrollViewer>
+
+        <controls:BusyOverlay IsActive="{x:Bind Vm.IsBusy, Mode=OneWay}" Text="正在加载…" />
+    </Grid>
+</views:PageBase>

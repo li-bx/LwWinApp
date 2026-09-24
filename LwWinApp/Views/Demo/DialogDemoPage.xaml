@@ -1,0 +1,246 @@
+<?xml version="1.0" encoding="utf-8"?>
+<views:PageBase
+    x:Class="LwWinApp.Views.Demo.DialogDemoPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:controls="using:LwWinApp.Controls"
+    xmlns:views="using:LwWinApp.Views"
+    mc:Ignorable="d">
+
+    <Grid>
+        <ScrollViewer Padding="24" VerticalScrollBarVisibility="Auto">
+            <StackPanel MaxWidth="1100" HorizontalAlignment="Stretch" Spacing="16">
+
+                <controls:PageHeader
+                    Title="弹出对话框"
+                    Description="提示、确认、输入、进度、文件选择。全部走 IDialogService：同一时刻只能开一个 ContentDialog，并发调用由服务排队，页面自己弹很容易撞上。" />
+
+                <InfoBar
+                    IsClosable="False"
+                    IsOpen="True"
+                    Message="{x:Bind Vm.LastResult, Mode=OneWay}"
+                    Severity="Success"
+                    Title="最近一次结果" />
+
+                <!-- ============ 消息类 ============ -->
+                <Border Style="{StaticResource CardStyle}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource SectionTitleTextStyle}" Text="消息提示" />
+                        <TextBlock Style="{StaticResource CardCaptionTextStyle}" Text="只有「知道了」一个按钮。措辞要写清楚发生了什么，别只说「操作失败」。" />
+
+                        <StackPanel
+                            Margin="0,16,0,0"
+                            Orientation="Horizontal"
+                            Spacing="10">
+                            <Button Command="{x:Bind Vm.ShowInfoCommand}" Style="{StaticResource ToolbarButtonStyle}">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon FontSize="14" Glyph="&#xE946;" />
+                                    <TextBlock Text="信息提示" />
+                                </StackPanel>
+                            </Button>
+
+                            <Button Command="{x:Bind Vm.ShowSuccessCommand}" Style="{StaticResource ToolbarButtonStyle}">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon FontSize="14" Glyph="&#xE73E;" />
+                                    <TextBlock Text="成功提示" />
+                                </StackPanel>
+                            </Button>
+
+                            <Button Command="{x:Bind Vm.ShowWarningCommand}" Style="{StaticResource ToolbarButtonStyle}">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon FontSize="14" Glyph="&#xE7BA;" />
+                                    <TextBlock Text="警告提示" />
+                                </StackPanel>
+                            </Button>
+
+                            <Button Command="{x:Bind Vm.ShowErrorCommand}" Style="{StaticResource ToolbarButtonStyle}">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon FontSize="14" Glyph="&#xEA39;" />
+                                    <TextBlock Text="错误提示" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- ============ 确认类 ============ -->
+                <Border Style="{StaticResource CardStyle}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource SectionTitleTextStyle}" Text="确认对话框" />
+                        <TextBlock Style="{StaticResource CardCaptionTextStyle}" Text="主按钮文字要写具体动作（「删除」「提交」），不要用「确定」——用户在紧张的时候只会看按钮。" />
+
+                        <StackPanel
+                            Margin="0,16,0,0"
+                            Orientation="Horizontal"
+                            Spacing="10">
+                            <Button Command="{x:Bind Vm.ShowConfirmCommand}" Style="{StaticResource ToolbarButtonStyle}">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon FontSize="14" Glyph="&#xE8BD;" />
+                                    <TextBlock Text="普通确认" />
+                                </StackPanel>
+                            </Button>
+
+                            <Button
+                                Command="{x:Bind Vm.ShowDangerConfirmCommand}"
+                                Style="{StaticResource DangerButtonStyle}">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon FontSize="14" Glyph="&#xE74D;" />
+                                    <TextBlock Text="危险操作确认" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+
+                        <Border Style="{StaticResource CodeBlockStyle}">
+                            <TextBlock Style="{StaticResource CodeTextStyle}">
+// danger: true 会把主按钮染成警示色
+var ok = await _dialogs.ConfirmAsync(
+    "将删除该租户下的全部数据，此操作不可恢复。",
+    "删除租户",
+    primaryText: "永久删除",
+    danger: true);</TextBlock>
+                        </Border>
+                    </StackPanel>
+                </Border>
+
+                <!-- ============ 输入类 ============ -->
+                <Border Style="{StaticResource CardStyle}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource SectionTitleTextStyle}" Text="输入对话框" />
+                        <TextBlock
+                            Style="{StaticResource CardCaptionTextStyle}"
+                            Text="校验函数的返回值决定命运：返回 null 放行，返回文字则显示为红字并把对话框留住 —— 用户输的内容一个字都不会丢。" />
+
+                        <StackPanel
+                            Margin="0,16,0,0"
+                            Orientation="Horizontal"
+                            Spacing="10">
+                            <Button Command="{x:Bind Vm.ShowInputCommand}" Style="{StaticResource ToolbarButtonStyle}">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon FontSize="14" Glyph="&#xE70F;" />
+                                    <TextBlock Text="文本输入（带长度校验）" />
+                                </StackPanel>
+                            </Button>
+
+                            <Button Command="{x:Bind Vm.ShowValidatedInputCommand}" Style="{StaticResource ToolbarButtonStyle}">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon FontSize="14" Glyph="&#xE8C7;" />
+                                    <TextBlock Text="手机号（带格式校验）" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- ============ 进度类 ============ -->
+                <Border Style="{StaticResource CardStyle}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource SectionTitleTextStyle}" Text="带进度的对话框" />
+                        <TextBlock
+                            Style="{StaticResource CardCaptionTextStyle}"
+                            Text="适合「必须等它做完才能继续」的操作。任务跑完对话框自己关闭；用户点取消会先请求取消，等任务真正退出才关。" />
+
+                        <StackPanel
+                            Margin="0,16,0,0"
+                            Orientation="Horizontal"
+                            Spacing="10">
+                            <Button Command="{x:Bind Vm.ShowProgressCommand}" Style="{StaticResource ToolbarButtonStyle}">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon FontSize="14" Glyph="&#xE9D9;" />
+                                    <TextBlock Text="导出（约 2.4 秒）" />
+                                </StackPanel>
+                            </Button>
+
+                            <Button Command="{x:Bind Vm.ShowCancellableWorkCommand}" Style="{StaticResource ToolbarButtonStyle}">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon FontSize="14" Glyph="&#xE895;" />
+                                    <TextBlock Text="同步（中途取消试试）" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- ============ 自定义内容 ============ -->
+                <Border Style="{StaticResource CardStyle}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource SectionTitleTextStyle}" Text="先选参数再确认" />
+                        <TextBlock
+                            Style="{StaticResource CardCaptionTextStyle}"
+                            Text="页面上的输入 + 一个确认框，是最常见的组合流程。确认框里要把参数复述一遍，让用户有机会发现自己选错了。" />
+
+                        <Grid Margin="0,16,0,0" ColumnSpacing="16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="200" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0" Style="{StaticResource FormFieldPanelStyle}">
+                                <TextBlock Style="{StaticResource FormLabelTextStyle}" Text="工单标题" />
+                                <TextBox Text="{x:Bind Vm.TicketTitle, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="1" Style="{StaticResource FormFieldPanelStyle}">
+                                <TextBlock Style="{StaticResource FormLabelTextStyle}" Text="优先级" />
+                                <ComboBox
+                                    HorizontalAlignment="Stretch"
+                                    DisplayMemberPath="Text"
+                                    ItemsSource="{x:Bind Vm.PriorityOptions}"
+                                    SelectedItem="{x:Bind Vm.SelectedPriority, Mode=TwoWay}" />
+                            </StackPanel>
+
+                            <Button
+                                Grid.Column="2"
+                                VerticalAlignment="Bottom"
+                                Margin="0,0,0,14"
+                                Command="{x:Bind Vm.SubmitTicketCommand}"
+                                Content="提交工单"
+                                Style="{StaticResource ToolbarButtonStyle}" />
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- ============ 文件选择 ============ -->
+                <Border Style="{StaticResource CardStyle}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource SectionTitleTextStyle}" Text="文件与文件夹选择" />
+                        <TextBlock
+                            Style="{StaticResource CardCaptionTextStyle}"
+                            Text="未打包应用没有包标识，Picker 必须先用窗口句柄初始化，否则调用会直接抛 COMException。FilePickerService 里已经封装好了。" />
+
+                        <StackPanel
+                            Margin="0,16,0,0"
+                            Orientation="Horizontal"
+                            Spacing="10">
+                            <Button Command="{x:Bind Vm.PickFileCommand}" Style="{StaticResource ToolbarButtonStyle}">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon FontSize="14" Glyph="&#xE8A5;" />
+                                    <TextBlock Text="选择文件" />
+                                </StackPanel>
+                            </Button>
+
+                            <Button Command="{x:Bind Vm.PickFolderCommand}" Style="{StaticResource ToolbarButtonStyle}">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon FontSize="14" Glyph="&#xE8B7;" />
+                                    <TextBlock Text="选择文件夹" />
+                                </StackPanel>
+                            </Button>
+
+                            <Button Command="{x:Bind Vm.SaveFileCommand}" Style="{StaticResource ToolbarButtonStyle}">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon FontSize="14" Glyph="&#xE74E;" />
+                                    <TextBlock Text="另存为" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+            </StackPanel>
+        </ScrollViewer>
+
+        <controls:BusyOverlay IsActive="{x:Bind Vm.IsBusy, Mode=OneWay}" Text="正在处理…" />
+    </Grid>
+</views:PageBase>

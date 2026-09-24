@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ContentDialog
+    x:Class="LwWinApp.Views.Dialogs.UserEditDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    Title="新增用户"
+    PrimaryButtonText="保存"
+    CloseButtonText="取消"
+    DefaultButton="Primary"
+    mc:Ignorable="d">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" VerticalScrollMode="Auto">
+        <StackPanel Width="440" Spacing="0">
+
+            <!--
+                错误提示区。校验失败时对话框不关闭，把原因显示在这里，
+                用户输的内容一个字都不会丢。
+            -->
+            <InfoBar
+                x:Name="ErrorBar"
+                Margin="0,0,0,12"
+                IsOpen="False"
+                IsClosable="False"
+                Severity="Error" />
+
+            <Grid ColumnSpacing="12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Style="{StaticResource FormFieldPanelStyle}">
+                    <TextBlock Style="{StaticResource FormLabelTextStyle}" Text="登录账号 *" />
+                    <TextBox x:Name="UserNameBox" Text="{x:Bind Model.LoginName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Style="{StaticResource FormFieldPanelStyle}">
+                    <TextBlock Style="{StaticResource FormLabelTextStyle}" Text="姓名 *" />
+                    <TextBox Text="{x:Bind Model.RealName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                </StackPanel>
+            </Grid>
+
+            <StackPanel Style="{StaticResource FormFieldPanelStyle}">
+                <TextBlock Style="{StaticResource FormLabelTextStyle}" Text="{x:Bind Model.PasswordLabel, Mode=OneWay}" />
+                <PasswordBox Password="{x:Bind Model.Password, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="至少 6 位，含字母和数字" />
+            </StackPanel>
+
+            <Grid ColumnSpacing="12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Style="{StaticResource FormFieldPanelStyle}">
+                    <TextBlock Style="{StaticResource FormLabelTextStyle}" Text="邮箱" />
+                    <TextBox PlaceholderText="选填" Text="{x:Bind Model.Email, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Style="{StaticResource FormFieldPanelStyle}">
+                    <TextBlock Style="{StaticResource FormLabelTextStyle}" Text="手机号" />
+                    <TextBox PlaceholderText="选填" Text="{x:Bind Model.Phone, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                </StackPanel>
+            </Grid>
+
+            <Grid ColumnSpacing="12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Style="{StaticResource FormFieldPanelStyle}">
+                    <TextBlock Style="{StaticResource FormLabelTextStyle}" Text="性别" />
+                    <ComboBox
+                        HorizontalAlignment="Stretch"
+                        ItemsSource="{x:Bind Model.GenderOptions}"
+                        SelectedItem="{x:Bind Model.SelectedGender, Mode=TwoWay}"
+                        DisplayMemberPath="Text" />
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Style="{StaticResource FormFieldPanelStyle}">
+                    <TextBlock Style="{StaticResource FormLabelTextStyle}" Text="状态" />
+                    <ComboBox
+                        HorizontalAlignment="Stretch"
+                        ItemsSource="{x:Bind Model.StatusOptions}"
+                        SelectedItem="{x:Bind Model.SelectedStatus, Mode=TwoWay}"
+                        DisplayMemberPath="Text" />
+                </StackPanel>
+            </Grid>
+
+            <Grid ColumnSpacing="12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Style="{StaticResource FormFieldPanelStyle}">
+                    <TextBlock Style="{StaticResource FormLabelTextStyle}" Text="所属部门" />
+                    <ComboBox
+                        HorizontalAlignment="Stretch"
+                        ItemsSource="{x:Bind Model.DeptOptions}"
+                        SelectedItem="{x:Bind Model.SelectedDept, Mode=TwoWay}"
+                        DisplayMemberPath="Text" />
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Style="{StaticResource FormFieldPanelStyle}">
+                    <TextBlock Style="{StaticResource FormLabelTextStyle}" Text="角色" />
+                    <ComboBox
+                        HorizontalAlignment="Stretch"
+                        ItemsSource="{x:Bind Model.RoleOptions}"
+                        SelectedItem="{x:Bind Model.SelectedRole, Mode=TwoWay}"
+                        DisplayMemberPath="Text" />
+                </StackPanel>
+            </Grid>
+
+            <StackPanel Style="{StaticResource FormFieldPanelStyle}">
+                <TextBlock Style="{StaticResource FormLabelTextStyle}" Text="备注" />
+                <TextBox
+                    AcceptsReturn="True"
+                    MaxLength="200"
+                    PlaceholderText="选填，最多 200 字"
+                    Text="{x:Bind Model.Remark, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                    TextWrapping="Wrap"
+                    Height="72" />
+            </StackPanel>
+
+        </StackPanel>
+    </ScrollViewer>
+</ContentDialog>

@@ -3,14 +3,34 @@
     x:Class="LwWinApp.App"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:LwWinApp">
+    xmlns:local="using:LwWinApp"
+    xmlns:utils="using:LwWinApp.Utils">
+
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
+                <!--
+                    顺序不能改：XamlControlsResources 必须排在前面，
+                    后面几个字典里的 BasedOn="{StaticResource DefaultButtonStyle}"
+                    这类引用才解析得到。
+                -->
                 <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
-                <!-- Other merged dictionaries here -->
+                <ResourceDictionary Source="Themes/Colors.xaml" />
+                <ResourceDictionary Source="Themes/Icons.xaml" />
+                <ResourceDictionary Source="Themes/Styles.xaml" />
             </ResourceDictionary.MergedDictionaries>
-            <!-- Other app resources here -->
+
+            <!--
+                绑定转换器。放在这里而不是某个主题字典里：
+                转换器和主题无关，混进主题字典会让人以为切换主题时它们会变。
+            -->
+            <utils:BoolNegationConverter x:Key="NotBoolConverter" />
+            <utils:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
+            <utils:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibilityConverter" />
+            <utils:StringToVisibilityConverter x:Key="StringToVisibilityConverter" />
+            <utils:EmptyStringToVisibilityConverter x:Key="EmptyStringToVisibilityConverter" />
+            <utils:EmptyCollectionToVisibilityConverter x:Key="EmptyCollectionToVisibilityConverter" />
+            <utils:EnumEqualsToVisibilityConverter x:Key="EnumEqualsToVisibilityConverter" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>

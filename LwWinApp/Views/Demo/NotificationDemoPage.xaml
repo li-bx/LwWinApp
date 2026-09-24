@@ -1,0 +1,255 @@
+<?xml version="1.0" encoding="utf-8"?>
+<views:PageBase
+    x:Class="LwWinApp.Views.Demo.NotificationDemoPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:controls="using:LwWinApp.Controls"
+    xmlns:demo="using:LwWinApp.ViewModels.Demo"
+    xmlns:views="using:LwWinApp.Views"
+    mc:Ignorable="d">
+
+    <Grid>
+        <ScrollViewer Padding="24" VerticalScrollBarVisibility="Auto">
+            <StackPanel MaxWidth="1100" HorizontalAlignment="Stretch" Spacing="16">
+
+                <controls:PageHeader
+                    Title="消息通知"
+                    Description="三种反馈方式各有分工：InfoBar 留在页面上等用户处理，轻提示几秒后自己走掉，TeachingTip 指向具体控件做引导。">
+                    <controls:PageHeader.Actions>
+                        <Button Command="{x:Bind Vm.ClearInfoBarsCommand}" Style="{StaticResource ToolbarButtonStyle}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon FontSize="14" Glyph="&#xE8BB;" />
+                                <TextBlock Text="清空消息条" />
+                            </StackPanel>
+                        </Button>
+                    </controls:PageHeader.Actions>
+                </controls:PageHeader>
+
+                <!--
+                    消息条其实显示在「工作区顶部」那条全局宿主里（Shell 提供的），
+                    不在本页内部。因为 NotificationService 是单例：如果每个页面各自
+                    注册宿主，最后挂上去的那个会赢，切到别的标签后消息就发到一个
+                    看不见的容器里去了。全局一份最省心 —— 效果在页面正上方也看得见。
+                -->
+                <InfoBar
+                    IsClosable="False"
+                    IsOpen="True"
+                    Message="页面里的消息条统一显示在工作区顶部那条区域，本页不单独占用位置。"
+                    Severity="Informational" />
+
+                <!-- ============ InfoBar ============ -->
+                <Border Style="{StaticResource CardStyle}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource SectionTitleTextStyle}" Text="页内消息条 InfoBar" />
+                        <TextBlock
+                            Style="{StaticResource CardCaptionTextStyle}"
+                            Text="错误级别不会自动消失 —— 用户需要时间读完再自己关；其他级别到点自动收起。" />
+
+                        <Grid Margin="0,16,0,0" ColumnSpacing="16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0" Style="{StaticResource FormFieldPanelStyle}">
+                                <TextBlock Style="{StaticResource FormLabelTextStyle}" Text="严重级别" />
+                                <ComboBox
+                                    Width="200"
+                                    DisplayMemberPath="Text"
+                                    ItemsSource="{x:Bind Vm.SeverityOptions}"
+                                    SelectedItem="{x:Bind Vm.SelectedSeverity, Mode=TwoWay}" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="1" Style="{StaticResource FormFieldPanelStyle}">
+                                <TextBlock Style="{StaticResource FormLabelTextStyle}" Text="消息内容" />
+                                <TextBox Text="{x:Bind Vm.CustomMessage, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="2" Style="{StaticResource FormFieldPanelStyle}">
+                                <TextBlock Style="{StaticResource FormLabelTextStyle}" Text="自动关闭" />
+                                <ComboBox
+                                    Width="150"
+                                    DisplayMemberPath="Text"
+                                    ItemsSource="{x:Bind Vm.DurationOptions}"
+                                    SelectedItem="{x:Bind Vm.SelectedDuration, Mode=TwoWay}" />
+                            </StackPanel>
+                        </Grid>
+
+                        <StackPanel
+                            Margin="0,4,0,0"
+                            Orientation="Horizontal"
+                            Spacing="16">
+                            <CheckBox Content="显示标题" IsChecked="{x:Bind Vm.WithTitle, Mode=TwoWay}" />
+
+                            <Button Command="{x:Bind Vm.ShowInfoBarCommand}" Style="{StaticResource ToolbarButtonStyle}">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon FontSize="14" Glyph="&#xE8BD;" />
+                                    <TextBlock Text="发出消息条" />
+                                </StackPanel>
+                            </Button>
+
+                            <Button Command="{x:Bind Vm.ShowAllSeveritiesCommand}" Style="{StaticResource ToolbarButtonStyle}">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon FontSize="14" Glyph="&#xE9D9;" />
+                                    <TextBlock Text="四种级别一起发" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+
+                        <Border Style="{StaticResource CodeBlockStyle}">
+                            <TextBlock Style="{StaticResource CodeTextStyle}">
+_notify.Success("导出完成，共 1,248 条记录。");
+_notify.Error("无法连接到 192.168.1.100:3306，请检查网络。");   // 错误不自动消失</TextBlock>
+                        </Border>
+                    </StackPanel>
+                </Border>
+
+                <!-- ============ 轻提示 ============ -->
+                <Border Style="{StaticResource CardStyle}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource SectionTitleTextStyle}" Text="右下角轻提示" />
+                        <TextBlock
+                            Style="{StaticResource CardCaptionTextStyle}"
+                            Text="「知道就行」的反馈用它，不打断用户手上的事。多条会依次堆叠，不会互相覆盖。" />
+
+                        <Grid Margin="0,16,0,0" ColumnSpacing="16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0" Style="{StaticResource FormFieldPanelStyle}">
+                                <TextBlock Style="{StaticResource FormLabelTextStyle}" Text="类型" />
+                                <ComboBox
+                                    Width="140"
+                                    DisplayMemberPath="Text"
+                                    ItemsSource="{x:Bind Vm.ToastOptions}"
+                                    SelectedItem="{x:Bind Vm.SelectedToastKind, Mode=TwoWay}" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="1" Style="{StaticResource FormFieldPanelStyle}">
+                                <TextBlock Style="{StaticResource FormLabelTextStyle}" Text="提示文字" />
+                                <TextBox Text="{x:Bind Vm.ToastMessage, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                            </StackPanel>
+                        </Grid>
+
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <Button Command="{x:Bind Vm.ShowToastCommand}" Style="{StaticResource ToolbarButtonStyle}">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon FontSize="14" Glyph="&#xE7E7;" />
+                                    <TextBlock Text="发一条" />
+                                </StackPanel>
+                            </Button>
+
+                            <Button Command="{x:Bind Vm.ShowToastSequenceCommand}" Style="{StaticResource ToolbarButtonStyle}">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon FontSize="14" Glyph="&#xE895;" />
+                                    <TextBlock Text="连发 5 条" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- ============ 引导气泡 ============ -->
+                <Border Style="{StaticResource CardStyle}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource SectionTitleTextStyle}" Text="引导气泡 TeachingTip" />
+                        <TextBlock
+                            Style="{StaticResource CardCaptionTextStyle}"
+                            Text="新版功能、被改动过的按钮位置，用它指向那个控件说明。比弹对话框温和，用户可以不理它。" />
+
+                        <StackPanel
+                            Margin="0,16,0,0"
+                            Orientation="Horizontal"
+                            Spacing="10">
+                            <Button
+                                x:Name="NotifyTipAnchor"
+                                Content="点我查看引导"
+                                Style="{StaticResource ToolbarButtonStyle}" />
+
+                            <TeachingTip
+                                x:Name="NotifyTip"
+                                Title="这里有个新功能"
+                                Subtitle="TeachingTip 指向具体控件，点击标题栏以外的区域就会收起。"
+                                ActionButtonContent="去看看"
+                                CloseButtonContent="知道了"
+                                IsLightDismissEnabled="True"
+                                Target="{x:Bind NotifyTipAnchor}"
+                                ActionButtonClick="OnTipActionButtonClick" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- ============ 历史 ============ -->
+                <Border Style="{StaticResource CardStyle}">
+                    <StackPanel>
+                        <Grid ColumnSpacing="16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Style="{StaticResource SectionTitleTextStyle}" Text="本次会话发出的消息" />
+                                <TextBlock Style="{StaticResource CardCaptionTextStyle}" Text="只保留最近 20 条，方便回看刚才发了什么。" />
+                            </StackPanel>
+
+                            <Button
+                                Grid.Column="1"
+                                VerticalAlignment="Top"
+                                Command="{x:Bind Vm.ClearHistoryCommand}"
+                                Content="清空记录"
+                                Style="{StaticResource ToolbarButtonStyle}" />
+                        </Grid>
+
+                        <TextBlock
+                            Margin="0,16,0,0"
+                            HorizontalAlignment="Center"
+                            Style="{StaticResource CardCaptionTextStyle}"
+                            Text="还没有发出过任何消息。"
+                            Visibility="{x:Bind Vm.History, Mode=OneWay, Converter={StaticResource EmptyCollectionToVisibilityConverter}}" />
+
+                        <ItemsControl Margin="0,12,0,0" ItemsSource="{x:Bind Vm.History, Mode=OneWay}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="demo:NotificationRecord">
+                                    <Grid Padding="0,7" ColumnSpacing="12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="80" />
+                                            <ColumnDefinition Width="130" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <TextBlock
+                                            Grid.Column="0"
+                                            Style="{StaticResource CardCaptionTextStyle}"
+                                            Text="{x:Bind TimeText}" />
+                                        <TextBlock
+                                            Grid.Column="1"
+                                            Style="{StaticResource CardTitleTextStyle}"
+                                            Text="{x:Bind Kind}" />
+                                        <TextBlock
+                                            Grid.Column="2"
+                                            Style="{StaticResource CardCaptionTextStyle}"
+                                            Text="{x:Bind Message}" />
+                                        <TextBlock
+                                            Grid.Column="3"
+                                            Style="{StaticResource CardCaptionTextStyle}"
+                                            Text="{x:Bind Title}" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
+            </StackPanel>
+        </ScrollViewer>
+
+        <controls:BusyOverlay IsActive="{x:Bind Vm.IsBusy, Mode=OneWay}" Text="正在发送…" />
+    </Grid>
+</views:PageBase>

@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="utf-8"?>
+<views:PageBase
+    x:Class="LwWinApp.Views.System.DeptTreePage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:controls="using:LwWinApp.Controls"
+    xmlns:dtos="using:LwWinApp.Models.Dtos"
+    xmlns:views="using:LwWinApp.Views"
+    mc:Ignorable="d">
+
+    <Grid Padding="24" RowSpacing="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <controls:PageHeader
+            Grid.Row="0"
+            Title="部门架构"
+            Description="TreeView 绑定 sys_dept 的真实层级（parent_id 自引用）。增删改之后整棵树重新拉取 —— 部门数据量小，局部改树带来的不一致风险远大于省下的那点查询。">
+            <controls:PageHeader.Actions>
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Button Command="{x:Bind Vm.AddRootCommand}" Style="{StaticResource ToolbarButtonStyle}">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon FontSize="14" Glyph="&#xE710;" />
+                            <TextBlock Text="新增顶级部门" />
+                        </StackPanel>
+                    </Button>
+
+                    <Button
+                        Command="{x:Bind Vm.RefreshCommand}"
+                        Style="{StaticResource ToolbarButtonStyle}"
+                        ToolTipService.ToolTip="重新加载">
+                        <FontIcon FontSize="14" Glyph="&#xE72C;" />
+                    </Button>
+                </StackPanel>
+            </controls:PageHeader.Actions>
+        </controls:PageHeader>
+
+        <Grid Grid.Row="1" ColumnSpacing="16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="360" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- ============ 左侧：树 ============ -->
+            <Border
+                Grid.Column="0"
+                Padding="8"
+                Style="{StaticResource CardStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel
+                        Grid.Row="0"
+                        Margin="8,4,8,8"
+                        Orientation="Horizontal"
+                        Spacing="8">
+                        <TextBlock
+                            VerticalAlignment="Center"
+                            Style="{StaticResource CardTitleTextStyle}"
+                            Text="部门层级" />
+                        <TextBlock
+                            VerticalAlignment="Center"
+                            Style="{StaticResource CardCaptionTextStyle}"
+                            Text="{x:Bind Vm.DeptCount, Mode=OneWay}" />
+                    </StackPanel>
+
+                    <TreeView
+                        x:Name="DeptTreeView"
+                        Grid.Row="1"
+                        CanDragItems="False"
+                        CanReorderItems="False"
+                        ItemsSource="{x:Bind Vm.RootNodes, Mode=OneWay}"
+                        ItemInvoked="OnTreeItemInvoked"
+                        SelectionMode="Single">
+                        <TreeView.ItemTemplate>
+                            <DataTemplate x:DataType="dtos:DeptNode">
+                                <!--
+                                    ItemTemplate 的根必须是 TreeViewItem，子节点靠它的 ItemsSource 展开。
+                                    这里直接用 Children 递归 —— DeptNode 是不可变的，整棵子树已经在内存里了。
+                                -->
+                                <TreeViewItem
+                                    IsExpanded="True"
+                                    ItemsSource="{x:Bind Children}">
+                                    <StackPanel
+                                        Orientation="Horizontal"
+                                        Spacing="8">
+                                        <FontIcon FontSize="14" Glyph="&#xE8F4;" />
+                                        <TextBlock Text="{x:Bind DeptName}" />
+                                        <TextBlock
+                                            Style="{StaticResource CardCaptionTextStyle}"
+                                            Text="{x:Bind Leader}" />
+                                    </StackPanel>
+                                </TreeViewItem>
+                            </DataTemplate>
+                        </TreeView.ItemTemplate>
+                    </TreeView>
+                </Grid>
+            </Border>
+
+            <!-- ============ 右侧：详情与操作 ============ -->
+            <Border Grid.Column="1" Style="{StaticResource CardStyle}">
+                <Grid>
+                    <!-- 没选中任何节点时的提示 -->
+                    <StackPanel
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Spacing="10"
+                        Visibility="{x:Bind Vm.HasSelection, Mode=OneWay, Converter={StaticResource InverseBoolToVisibilityConverter}}">
+                        <FontIcon
+                            HorizontalAlignment="Center"
+                            FontSize="36"
+                            Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                            Glyph="&#xE8F4;" />
+                        <TextBlock
+                            HorizontalAlignment="Center"
+                            Style="{StaticResource CardCaptionTextStyle}"
+                            Text="在左侧选择一个部门，这里会显示它的详细信息。" />
+                    </StackPanel>
+
+                    <StackPanel
+                        Spacing="16"
+                        Visibility="{x:Bind Vm.HasSelection, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+
+                        <StackPanel Spacing="4">
+                            <TextBlock
+                                Style="{StaticResource PageTitleTextStyle}"
+                                Text="{x:Bind Vm.SelectedDeptName, Mode=OneWay}" />
+                            <TextBlock
+                                Style="{StaticResource PageDescriptionTextStyle}"
+                                Text="{x:Bind Vm.SelectedChildSummary, Mode=OneWay}" />
+                        </StackPanel>
+
+                        <Grid ColumnSpacing="16" RowSpacing="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <StackPanel Grid.Row="0" Grid.Column="0" Spacing="2">
+                                <TextBlock Style="{StaticResource FormLabelTextStyle}" Text="上级部门" />
+                                <TextBlock Style="{StaticResource CardTitleTextStyle}" Text="{x:Bind Vm.SelectedParentName, Mode=OneWay}" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Row="0" Grid.Column="1" Spacing="2">
+                                <TextBlock Style="{StaticResource FormLabelTextStyle}" Text="负责人" />
+                                <TextBlock Style="{StaticResource CardTitleTextStyle}" Text="{x:Bind Vm.SelectedLeader, Mode=OneWay}" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Row="1" Grid.Column="0" Spacing="2">
+                                <TextBlock Style="{StaticResource FormLabelTextStyle}" Text="状态" />
+                                <TextBlock Style="{StaticResource CardTitleTextStyle}" Text="{x:Bind Vm.SelectedStatusText, Mode=OneWay}" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Row="1" Grid.Column="1" Spacing="2">
+                                <TextBlock Style="{StaticResource FormLabelTextStyle}" Text="创建时间" />
+                                <TextBlock Style="{StaticResource CardTitleTextStyle}" Text="{x:Bind Vm.SelectedCreateTime, Mode=OneWay}" />
+                            </StackPanel>
+                        </Grid>
+
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <Button Command="{x:Bind Vm.AddChildCommand}" Style="{StaticResource ToolbarButtonStyle}">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon FontSize="14" Glyph="&#xE710;" />
+                                    <TextBlock Text="新增下级" />
+                                </StackPanel>
+                            </Button>
+
+                            <Button Command="{x:Bind Vm.EditCommand}" Style="{StaticResource ToolbarButtonStyle}">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon FontSize="14" Glyph="&#xE70F;" />
+                                    <TextBlock Text="编辑" />
+                                </StackPanel>
+                            </Button>
+
+                            <Button Command="{x:Bind Vm.DeleteCommand}" Style="{StaticResource DangerButtonStyle}">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon FontSize="14" Glyph="&#xE74D;" />
+                                    <TextBlock Text="删除" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+
+                        <InfoBar
+                            IsClosable="False"
+                            IsOpen="True"
+                            Message="删除部门时，如果它下面还有子部门或还有用户，数据库层面会拦下来并给出原因 —— 先清空再从树里摘掉，比留下一个悬空的 parent_id 强。"
+                            Severity="Informational"
+                            Title="关于删除" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <controls:BusyOverlay
+            Grid.RowSpan="2"
+            IsActive="{x:Bind Vm.IsBusy, Mode=OneWay}"
+            Text="正在加载部门树…" />
+    </Grid>
+</views:PageBase>

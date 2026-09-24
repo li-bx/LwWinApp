@@ -3,17 +3,263 @@
     x:Class="LwWinApp.MainWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:LwWinApp"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    mc:Ignorable="d"
-    Title="LwWinApp">
+    mc:Ignorable="d">
 
     <Window.SystemBackdrop>
         <MicaBackdrop />
     </Window.SystemBackdrop>
 
-    <Grid>
-        
+    <!--
+        根元素必须是 Grid：ThemeService 要把 RequestedTheme 设在 Window.Content 上才能让
+        Mica 背景跟着变，WindowService 也要求拖拽区域是自带 Padding 的容器。
+    -->
+    <!--
+        KeyboardAcceleratorPlacementMode="Hidden" 关掉的是「快捷键气泡」：
+        根 Grid 上挂了一堆窗口级快捷键（Ctrl+W / Ctrl+Tab / Ctrl+1..9），
+        默认每个都会把按键组合显示成宿主元素的 tooltip，而宿主正好铺满整个窗口 ——
+        鼠标划到标题栏、状态栏、右侧那圈没被任何子元素盖住的空白上，就会冒出一个
+        「Ctrl+W」小气泡（十一个里只显示排最前的那个）。它跟界面上任何按钮都不对应。
+        这个属性在 UIElement 上（不是 KeyboardAccelerator 上），标在根元素一处即可。
+    -->
+    <Grid x:Name="RootGrid" KeyboardAcceleratorPlacementMode="Hidden">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- ==================== 标题栏 ====================
+             这一行的 Padding 由 WindowService 接管（给系统按钮让位），
+             所以横向间距一律用子元素的 Margin 表达。 -->
+        <Grid
+            x:Name="TitleBar"
+            Grid.Row="0"
+            Height="48">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <StackPanel
+                Grid.Column="0"
+                Margin="16,0,0,0"
+                VerticalAlignment="Center"
+                Orientation="Horizontal"
+                Spacing="10">
+                <!--
+                    应用标记 —— 直接用图标本体，跟任务栏、Alt+Tab 上那个是同一张图
+                    （tools/make-icon.ps1 生成的 AppIcon.png）。
+
+                    这里不要再套一层 Border + CornerRadius：圆角是画在图里的，
+                    外加一层背景色方块会在图标的透明圆角处透出来，边角变成方上加圆。
+                -->
+                <Image
+                    Width="24"
+                    Height="24"
+                    Source="ms-appx:///Assets/AppIcon.png"
+                    Stretch="Uniform" />
+
+                <TextBlock
+                    VerticalAlignment="Center"
+                    Style="{StaticResource CardTitleTextStyle}"
+                    Text="{x:Bind AppTitle}" />
+
+                <TextBlock
+                    VerticalAlignment="Center"
+                    Style="{StaticResource CardCaptionTextStyle}"
+                    Text="|" />
+
+                <!-- 副标题跟着当前标签走 -->
+                <TextBlock
+                    VerticalAlignment="Center"
+                    Style="{StaticResource CardCaptionTextStyle}"
+                    Text="{x:Bind Vm.Subtitle, Mode=OneWay}" />
+            </StackPanel>
+
+            <StackPanel
+                Grid.Column="2"
+                Margin="0,0,8,0"
+                VerticalAlignment="Center"
+                Orientation="Horizontal"
+                Spacing="2">
+                <Button
+                    Command="{x:Bind Vm.ToggleThemeCommand}"
+                    Style="{StaticResource IconButtonStyle}"
+                    ToolTipService.ToolTip="切换浅色 / 深色">
+                    <FontIcon FontSize="14" Glyph="{x:Bind Vm.ThemeGlyph, Mode=OneWay}" />
+                </Button>
+
+                <Button
+                    Command="{x:Bind Vm.OpenSettingsCommand}"
+                    Style="{StaticResource IconButtonStyle}"
+                    ToolTipService.ToolTip="系统设置">
+                    <FontIcon FontSize="14" Glyph="&#xE713;" />
+                </Button>
+
+                <Button
+                    Command="{x:Bind Vm.OpenAboutCommand}"
+                    Style="{StaticResource IconButtonStyle}"
+                    ToolTipService.ToolTip="关于">
+                    <FontIcon FontSize="14" Glyph="&#xE946;" />
+                </Button>
+            </StackPanel>
+        </Grid>
+
+        <!-- ==================== 主体：左一级 + 顶二级 ==================== -->
+        <NavigationView
+            x:Name="ShellNav"
+            Grid.Row="1"
+            IsBackButtonVisible="Collapsed"
+            IsPaneToggleButtonVisible="True"
+            IsSettingsVisible="False"
+            OpenPaneLength="248"
+            PaneDisplayMode="Left"
+            SelectionChanged="OnNavSelectionChanged">
+            <!-- 菜单项在 code-behind 里按 PageCatalog 生成：
+                 菜单结构和页面登记表是同一份数据，加页面只改一处。 -->
+
+            <NavigationView.Content>
+                <!--
+                    一层 Grid，两个元素叠在一起：TabView 铺满整格，消息宿主浮在它上面。
+                    以前消息宿主独占 Grid 的第 0 行，来一条消息就把整块内容区顶下去一次，
+                    标签栏跟着上下跳（页面也会重排一遍）。现在两者同处一格，
+                    消息只覆盖、不占位，底下什么都不动。
+                -->
+                <Grid>
+                    <TabView
+                        x:Name="ShellTabs"
+                        Margin="12,12,12,0"
+                        CanDragTabs="True"
+                        CanReorderTabs="True"
+                        CloseButtonOverlayMode="OnPointerOver"
+                        IsAddTabButtonVisible="True"
+                        TabWidthMode="SizeToContent">
+                        <!-- 关闭标签由 TabNavigationService 统一处理（它订阅了 TabCloseRequested），
+                             这里再挂一个处理器会导致一次点击关两遍。 -->
+                        <TabView.TabStripHeader>
+                            <FontIcon
+                                Margin="12,0,4,0"
+                                VerticalAlignment="Center"
+                                FontSize="14"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                Glyph="&#xE8A9;"
+                                ToolTipService.ToolTip="已打开的页面" />
+                        </TabView.TabStripHeader>
+                    </TabView>
+
+                    <!--
+                        全局消息宿主。NotificationService 是单例，宿主也只能有一个：
+                        每个页面各挂一个的话，后挂的会顶掉先挂的，消息就只往最后一个页面跑。
+
+                        顶端留 60 是为了跳过标签条：TabView 自身 Margin.Top=12，
+                        标签条 48（WinUI 模板里的定值，TabView 没有公开这个高度），
+                        合起来正好是页面内容的起始位置。留少了消息条会压住标签栏 ——
+                        那是可以点的东西，被盖住就点不动了，所以宁可往下让。
+                        左右 24 跟页面内边距对齐。容器自身没有背景，空着时不吃鼠标。
+                    -->
+                    <StackPanel
+                        x:Name="InfoBarHost"
+                        Margin="24,60,24,0"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Top"
+                        Spacing="8" />
+                </Grid>
+            </NavigationView.Content>
+        </NavigationView>
+
+        <!-- ==================== 状态栏 ==================== -->
+        <Border
+            Grid.Row="2"
+            Padding="16,0"
+            Height="30"
+            BorderBrush="{ThemeResource CardBorderBrush}"
+            BorderThickness="0,1,0,0">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <TextBlock
+                    Grid.Column="0"
+                    VerticalAlignment="Center"
+                    Style="{StaticResource CardCaptionTextStyle}"
+                    Text="{x:Bind Vm.StatusText, Mode=OneWay}" />
+
+                <TextBlock
+                    Grid.Column="1"
+                    VerticalAlignment="Center"
+                    Style="{StaticResource CardCaptionTextStyle}"
+                    Text="{x:Bind Vm.DatabaseHint, Mode=OneWay}" />
+            </Grid>
+        </Border>
+
+        <!-- 轻提示宿主：浮在内容区右下角 -->
+        <StackPanel
+            x:Name="ToastHost"
+            Grid.Row="1"
+            Margin="0,0,24,24"
+            HorizontalAlignment="Right"
+            VerticalAlignment="Bottom"
+            Spacing="8" />
+
+        <!-- ==================== 快捷键 ====================
+             窗口级快捷键，挂在这个铺满窗口的根 Grid 上。
+             它们的「按键气泡」由上面那一层的 KeyboardAcceleratorPlacementMode 关掉了。 -->
+        <Grid.KeyboardAccelerators>
+            <KeyboardAccelerator
+                Key="W"
+                Invoked="OnCloseTabAccelerator"
+                Modifiers="Control" />
+            <KeyboardAccelerator
+                Key="Tab"
+                Invoked="OnNextTabAccelerator"
+                Modifiers="Control" />
+            <KeyboardAccelerator
+                Key="Tab"
+                Invoked="OnPreviousTabAccelerator"
+                Modifiers="Control,Shift" />
+
+            <!-- Ctrl+1..8 定位到第 N 个标签，Ctrl+9 定位到最后一个 -->
+            <KeyboardAccelerator
+                Key="Number1"
+                Invoked="OnGotoTabAccelerator"
+                Modifiers="Control" />
+            <KeyboardAccelerator
+                Key="Number2"
+                Invoked="OnGotoTabAccelerator"
+                Modifiers="Control" />
+            <KeyboardAccelerator
+                Key="Number3"
+                Invoked="OnGotoTabAccelerator"
+                Modifiers="Control" />
+            <KeyboardAccelerator
+                Key="Number4"
+                Invoked="OnGotoTabAccelerator"
+                Modifiers="Control" />
+            <KeyboardAccelerator
+                Key="Number5"
+                Invoked="OnGotoTabAccelerator"
+                Modifiers="Control" />
+            <KeyboardAccelerator
+                Key="Number6"
+                Invoked="OnGotoTabAccelerator"
+                Modifiers="Control" />
+            <KeyboardAccelerator
+                Key="Number7"
+                Invoked="OnGotoTabAccelerator"
+                Modifiers="Control" />
+            <KeyboardAccelerator
+                Key="Number8"
+                Invoked="OnGotoTabAccelerator"
+                Modifiers="Control" />
+            <KeyboardAccelerator
+                Key="Number9"
+                Invoked="OnGotoTabAccelerator"
+                Modifiers="Control" />
+        </Grid.KeyboardAccelerators>
     </Grid>
 </Window>

@@ -1,0 +1,57 @@
+# LwWinApp 走查示例脚本
+# 用法：
+#   powershell -NoProfile -ExecutionPolicy Bypass -File tools/uia.ps1 ^
+#     -ArgsFile tools/steps-sample.txt -OutDir docs/screenshots
+#
+# 本文件必须是 UTF-8（里面是中文控件名）。
+
+# 先把可能开着的弹出层收掉，免得按名字寻址命中菜单项而不是导航项
+key:{ESC}
+wait:800
+
+# 收尾：只留常驻的仪表盘，从干净状态开始
+clickid:AddButton
+wait:1200
+invoke:关闭全部标签
+wait:1500
+
+# 左侧一级导航 → 逐个开页面 + 截图
+select:用户管理
+wait:3000
+shot:walk-01-用户管理.png
+
+select:角色管理
+wait:2500
+shot:walk-02-角色管理.png
+
+select:操作日志
+wait:3000
+shot:walk-03-操作日志.png
+
+select:常用控件
+wait:2500
+shot:walk-04-常用控件.png
+
+# 对话框：普通确认 + 危险确认
+#
+# 注意关闭按钮的文字是按对话框给的，不是固定的「取消」：
+# 「普通确认」这个演示传的是 closeText="算了"，写「取消」会 INVOKE_FAIL。
+# 别图省事改用 clickid:CloseButton —— 标签页上的关闭按钮 AutomationId 也叫
+# CloseButton，没有对话框开着的时候会去关标签。
+select:弹出对话框
+wait:3000
+invoke:普通确认
+wait:2000
+shot:walk-05-普通确认框.png
+invoke:算了
+wait:1500
+invoke:危险操作确认
+wait:2000
+shot:walk-06-危险确认框.png
+invoke:取消
+wait:1500
+
+# 标签生命周期：Ctrl+W 关掉当前标签，然后 dump 出来核对剩下的标签
+key:^w
+wait:2000
+dump
