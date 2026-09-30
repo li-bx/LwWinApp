@@ -17,10 +17,15 @@
   关闭原因用新加的 `DialogResult`，不是 `ContentDialogResult` —— 后者分不出「点了取消」和「直接关了 X」。
 - `WindowHelper` 新增 `SetOwner` / `SetEnabled` / `CenterOnOwner`；`IThemeService` 新增 `ApplyToWindow`。
 
-### 未走查
+### 验证
 
-- 上面这一整页（含 `DialogWindow` 与 `IChildWindowService`）**只过了编译，尚未在真机上点过**。
-  走查完成后本节内容会并进 `[0.1.x]`，并补上 `docs/screenshots/` 里的截图。
+- 上面这一整页（含 `DialogWindow` 与 `IChildWindowService`）已在真机上走查通过，逐条结论见
+  README 第 10 节。五条最容易出问题的都过了：模态是否真的锁住属主、关内层时外层是否只解开一层、
+  非模态是否不锁属主且跟着属主收起、深色下弹窗本体与标题栏是否都变深、任务栏上是否只占一个按钮。
+- 走查收尾时另外查出一个缺口：**已经打开的弹窗不跟着切主题**（`ApplyToWindow` 只在窗口显示的那一刻
+  调一次，没有谁订阅 `ThemeChanged`）。实测数据与修法见 README 第 5 节「弹窗窗口不继承主题」。
+  **尚未修复**，本轮只记录。
+- 截图补在 `docs/screenshots/11-弹窗窗口.png` 与 `12-嵌套模态窗口.png`。
 
 ## [0.1.0] - 2026-09-24
 

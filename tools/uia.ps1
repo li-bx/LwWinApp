@@ -214,7 +214,20 @@ function Do-Invoke([string]$name) {
     for ($i = 0; $i -lt 6 -and $cur; $i++) {
         $ip = Get-Pattern $cur ([System.Windows.Automation.InvokePattern]::Pattern)
         if ($ip) {
-            $ip.Invoke()
+            # 禁用的元素 Invoke 会抛 ElementNotEnabledException，而本脚本是 Stop 级别 ——
+            # 整个走查会当场停在这一行，后面的步骤一条都不跑（不是打印一行 FAIL 接着往下走）。
+            # 禁用本身通常意味着「这一步的前提不成立」（例：只剩常驻标签时「关闭全部标签」
+            # 就是禁用的），报出来就够了。
+            if (-not $cur.Current.IsEnabled) {
+                Write-Output "INVOKE_FAIL '$name' 命中的元素是禁用的（前提条件不成立？）"
+                return
+            }
+            try {
+                $ip.Invoke()
+            } catch {
+                Write-Output "INVOKE_FAIL '$name' Invoke 抛异常：$($_.Exception.Message)"
+                return
+            }
             Start-Sleep -Milliseconds 900
             Write-Output "INVOKE ok '$name'"
             return
@@ -229,7 +242,17 @@ function Do-ClickId([string]$id) {
     if (-not $el) { Write-Output "CLICK_FAIL 找不到 id: '$id'"; return }
     $ip = Get-Pattern $el ([System.Windows.Automation.InvokePattern]::Pattern)
     if (-not $ip) { Write-Output "CLICK_FAIL '$id' 不支持 InvokePattern"; return }
-    $ip.Invoke()
+    # 同 Do-Invoke：禁用的元素直接 Invoke 会抛异常并把整个脚本带走。
+    if (-not $el.Current.IsEnabled) {
+        Write-Output "CLICK_FAIL '$id' 命中的元素是禁用的（前提条件不成立？）"
+        return
+    }
+    try {
+        $ip.Invoke()
+    } catch {
+        Write-Output "CLICK_FAIL '$id' Invoke 抛异常：$($_.Exception.Message)"
+        return
+    }
     Start-Sleep -Milliseconds 900
     Write-Output "CLICK ok '$id'"
 }
