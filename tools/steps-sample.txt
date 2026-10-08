@@ -9,13 +9,7 @@
 key:{ESC}
 wait:800
 
-# 收尾：只留常驻的仪表盘，从干净状态开始。
-#
-# 「关闭全部标签」这一项只在**有可关闭的标签**时才启用
-# （TabNavigationService：IsEnabled = 是否有 CanClose 的标签），而应用刚起来时
-# 只有常驻的仪表盘 —— 那一项是禁用的。所以先开一个页面再关，别一上来就点它。
-select:用户管理
-wait:2500
+# 收尾：只留常驻的仪表盘，从干净状态开始
 clickid:AddButton
 wait:1200
 invoke:关闭全部标签
@@ -56,35 +50,6 @@ wait:2000
 shot:walk-06-危险确认框.png
 invoke:取消
 wait:1500
-
-# 弹窗窗口：模态 + 嵌套模态（顺带把 docs/screenshots 里的 11 / 12 两张拍出来）
-#
-# 这一步的断言不止「有没有报 ok」：模态有没有真的锁住属主、属主是谁、任务栏会不会多一个按钮，
-# uia.ps1 都读不到，得另外读 IsEnabled / GWLP_HWNDPARENT / WS_EX_APPWINDOW。
-# 做法见 README 第 10 节「弹窗窗口」那一条。
-select:弹窗窗口
-wait:3000
-invoke:消息窗口
-wait:2500
-shot:walk-07-弹窗窗口.png
-
-# 三种关闭原因里最容易漏的那个：直接点标题栏的 X（不是「取消」）
-clickid:Close
-wait:2000
-
-# 嵌套：在外层之上再叠一个
-invoke:打开外层模态窗口
-wait:2500
-invoke:在它之上再开一个
-wait:2500
-shot:walk-08-嵌套模态窗口.png
-
-# 从里往外关。两层的关闭按钮文字都是「关闭」，而内层在树里排在外层前面，
-# 所以连点两次「关闭」的顺序正好是「先内后外」。
-invoke:关闭
-wait:2000
-invoke:关闭
-wait:2000
 
 # 标签生命周期：Ctrl+W 关掉当前标签，然后 dump 出来核对剩下的标签
 key:^w
